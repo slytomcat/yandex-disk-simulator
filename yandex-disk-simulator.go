@@ -127,13 +127,13 @@ func main() {
 			}
 		case "--help", "help":
 			fmt.Println(`Usage:
-	yandexdiskmock <cmd>
+	yandex-disk-similator <cmd>
 Commands:
 	tart	starts the daemon and begin starting events simulation
 	stop	stops the daemon
 	status	get the daemon status
 	sync	begin the synchronisation events simulation 
-MOK commands:
+Simulator commands:
 	daemon	start as a daemon (dont use it)`)
 			//	case "status", "stop":
 			//		if notExists(expandHome("~/Yandex.Disk")) {
@@ -149,13 +149,11 @@ MOK commands:
 }
 
 func daemonize() {
-	/* execute os.Args[0] with "daemon" as os.Args[1]*/
-	path, err := filepath.Abs(os.Args[0])
-	if err != nil {
-		log.Fatal(err)
-	}
-	cmd := exec.Command(path, "daemon")
-	err = cmd.Start()
+	// get executable name
+	_, exe := filepath.Split(os.Args[0])
+	// execute it with daemon command
+	cmd := exec.Command(exe, "daemon")
+	err := cmd.Start()
 	if err != nil {
 		log.Fatal(err)
 	}
