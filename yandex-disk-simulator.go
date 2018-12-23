@@ -7,7 +7,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"os/user"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -19,10 +18,7 @@ var (
 	socketPath = "/tmp/yandexdiskmock.socket"
 	startTime  = 1000
 
-	userHome string
-	once     sync.Once
-
-	msgLock sync.Mutex
+	msgLock, symLock sync.Mutex
 
 	// start sequence
 	message   = " "
@@ -51,6 +47,7 @@ var (
 
 func simulateSync(l io.Writer) {
 	// sync sequence
+	symLock.Lock()
 	setMsg(msgSync1)
 	l.Write([]byte("Sync start\n"))
 	time.Sleep(time.Duration(event11) * time.Millisecond)
@@ -65,10 +62,12 @@ func simulateSync(l io.Writer) {
 	time.Sleep(time.Duration(event14) * time.Millisecond)
 	setMsg(msgOk)
 	l.Write([]byte("Sync finished\n"))
+	symLock.Unlock()
 }
 
 func simulateStart(l io.Writer) {
 	// start sequence
+	symLock.Lock()
 	setMsg(" ")
 	time.Sleep(time.Duration(event1) * time.Millisecond)
 	setMsg(msgStart1)
@@ -85,26 +84,14 @@ func simulateStart(l io.Writer) {
 	time.Sleep(time.Duration(event5) * time.Millisecond)
 	setMsg(msgOk)
 	l.Write([]byte("Start simulation finished\n"))
+	symLock.Unlock()
 }
 
 func setMsg(m string) {
+	// thread sa
 	msgLock.Lock()
 	message = m
 	msgLock.Unlock()
-}
-
-func expandHome(path string) string {
-	if len(path) == 0 || path[0] != '~' {
-		return path
-	}
-	once.Do(func() {
-		usr, err := user.Current()
-		if err != nil {
-			log.Fatal("Can't get current user profile:", err)
-		}
-		userHome = usr.HomeDir
-	})
-	return filepath.Join(userHome, path[1:])
 }
 
 func notExists(path string) bool {
@@ -175,7 +162,7 @@ func daemonize() {
 }
 
 func daemon() {
-	dlog, err := os.OpenFile(expandHome("/tmp/yandexdiskmock.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0755)
+	dlog, err := os.OpenFile("/tmp/yandexdiskmock.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
 		log.Fatal("/tmp/yandexdiskmock.log opening error:", err)
 	}
@@ -188,12 +175,12 @@ func daemon() {
 		log.Fatal("syscall.Setsid() error:", err)
 	}
 	// create ~/Yandex.Disk/.sync/cli.log if it is not exists
-	err = os.MkdirAll(expandHome("~/Yandex.Disk/.sync"), 0755)
+	err = os.MkdirAll(os.ExpandEnv("$HOME/Yandex.Disk/.sync"), 0755)
 	if err != nil {
 		log.Fatal("~/Yandex.Disk/.sync creation error:", err)
 	}
 	// open logfile
-	logfile, err := os.OpenFile(expandHome("~/Yandex.Disk/.sync/cli.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0755)
+	logfile, err := os.OpenFile(os.ExpandEnv("$HOME/Yandex.Disk/.sync/cli.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
 		log.Fatal("~/Yandex.Disk/.sync/cli.log opening error:", err)
 	}
@@ -279,7 +266,7 @@ func socketSend(cmd string) {
 }
 
 func checkCfg() {
-	f, err := os.Open(expandHome("~/.config/yandex-disk/config.cfg"))
+	f, err := os.Open(os.ExpandEnv("$HOME/.config/yandex-disk/config.cfg"))
 	if err != nil {
 		fmt.Println("Error: option 'dir' is missing --")
 		os.Exit(1)
