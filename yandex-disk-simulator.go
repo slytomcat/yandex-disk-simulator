@@ -129,7 +129,7 @@ func main() {
 			fmt.Println(`Usage:
 	yandex-disk-similator <cmd>
 Commands:
-	tart	starts the daemon and begin starting events simulation
+	start	starts the daemon and begin starting events simulation
 	stop	stops the daemon
 	status	get the daemon status
 	sync	begin the synchronisation events simulation 
