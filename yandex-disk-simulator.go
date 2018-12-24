@@ -14,53 +14,66 @@ import (
 	"time"
 )
 
+// Event - the stucture for change event
+type Event struct {
+	msg      string        // status message
+	duration time.Duration // event duration
+	log      string        // cli.log message or no message if it is ""
+}
+
 var (
 	socketPath = "/tmp/yandexdiskmock.socket"
 	startTime  = 1000
 
+	message          = " "
 	msgLock, symLock sync.Mutex
 
+	msgIdle = "Synchronization core status: idle\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			Total: 43.50 GB\n			Used: 2.89 GB\n			Available: 40.61 GB\n		Max file size: 50 GB\n			Trash size: 0 B\n	\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	"
+
 	// start sequence
-	message   = " "
-	event1    = 1600
-	msgStart1 = "Synchronization core status: paused\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			The quota has not been received yet.\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	"
-	event2    = 250
-	msgStart2 = "Synchronization core status: index\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			The quota has not been received yet.\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	"
-	event3    = 600
-	msgStart3 = "Synchronization core status: busy\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			The quota has not been received yet.\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	"
-	event4    = 100
-	// again msgStart2
-	event5 = 4600
-	msgOk  = "Synchronization core status: idle\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			Total: 43.50 GB\n			Used: 2.89 GB\n			Available: 40.61 GB\n		Max file size: 50 GB\n			Trash size: 0 B\n	\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	"
+	startSequence = []Event{
+		Event{" ",
+			time.Duration(1600) * time.Millisecond,
+			""},
+		Event{"Synchronization core status: paused\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			The quota has not been received yet.\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	",
+			time.Duration(250) * time.Millisecond,
+			"Start simulation 1"},
+		Event{"Synchronization core status: index\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			The quota has not been received yet.\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	",
+			time.Duration(600) * time.Millisecond,
+			"Start simulation 2"},
+		Event{"Synchronization core status: busy\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			The quota has not been received yet.\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	",
+			time.Duration(100) * time.Millisecond,
+			"Start simulation 3"},
+		Event{"Synchronization core status: index\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			The quota has not been received yet.\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	",
+			time.Duration(4600) * time.Millisecond,
+			"Start simulation 4"},
+	}
 
 	// sync sequence
-	msgSync1 = "Synchronization core status: index\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			Total: 43.50 GB\n			Used: 2.89 GB\n			Available: 40.61 GB\n		Max file size: 50 GB\n			Trash size: 0 B\n	\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	"
-	event11  = 900
-	msgSync2 = "Sync progress: 65.34 MB/ 139.38 MB (46 %)\nSynchronization core status: index\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			Total: 43.50 GB\n			Used: 2.89 GB\n			Available: 40.61 GB\n		Max file size: 50 GB\n			Trash size: 0 B\n	\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	"
-	event12  = 100
-	msgSync3 = "Sync progress: 65.34 MB/ 139.38 MB (46 %)\nSynchronization core status: busy\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			Total: 43.50 GB\n			Used: 2.89 GB\n			Available: 40.61 GB\n		Max file size: 50 GB\n			Trash size: 0 B\n	\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	"
-	event13  = 1500
-	msgSync4 = "Sync progress: 139.38 MB/ 139.38 MB (100 %)\nSynchronization core status: index\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			Total: 43.50 GB\n			Used: 2.89 GB\n			Available: 40.61 GB\n		Max file size: 50 GB\n			Trash size: 0 B\n	\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	"
-	event14  = 1500
-	// msgOk
+	syncSequence = []Event{
+		Event{"Synchronization core status: index\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			Total: 43.50 GB\n			Used: 2.89 GB\n			Available: 40.61 GB\n		Max file size: 50 GB\n			Trash size: 0 B\n	\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	",
+			time.Duration(900) * time.Millisecond,
+			"Sync simulation started"},
+		Event{"Sync progress: 65.34 MB/ 139.38 MB (46 %)\nSynchronization core status: index\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			Total: 43.50 GB\n			Used: 2.89 GB\n			Available: 40.61 GB\n		Max file size: 50 GB\n			Trash size: 0 B\n	\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	",
+			time.Duration(100) * time.Millisecond,
+			"Sync simulation 1"},
+		Event{"Sync progress: 65.34 MB/ 139.38 MB (46 %)\nSynchronization core status: busy\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			Total: 43.50 GB\n			Used: 2.89 GB\n			Available: 40.61 GB\n		Max file size: 50 GB\n			Trash size: 0 B\n	\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	",
+			time.Duration(1500) * time.Millisecond,
+			"Sync simulation 2"},
+		Event{"Sync progress: 139.38 MB/ 139.38 MB (100 %)\nSynchronization core status: index\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			Total: 43.50 GB\n			Used: 2.89 GB\n			Available: 40.61 GB\n		Max file size: 50 GB\n			Trash size: 0 B\n	\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	",
+			time.Duration(500) * time.Millisecond,
+			"Sync simulation 3"},
+	}
 )
 
 func simulateSync(l io.Writer) {
-	// sync sequence
 	symLock.Lock()
-	setMsg(msgSync1)
-	l.Write([]byte("Sync start\n"))
-	time.Sleep(time.Duration(event11) * time.Millisecond)
-	setMsg(msgSync2)
-	l.Write([]byte("Sync pogress1\n"))
-	time.Sleep(time.Duration(event12) * time.Millisecond)
-	setMsg(msgSync3)
-	l.Write([]byte("Sync pogress2\n"))
-	time.Sleep(time.Duration(event14) * time.Millisecond)
-	setMsg(msgSync4)
-	l.Write([]byte("Sync pogress3\n"))
-	time.Sleep(time.Duration(event14) * time.Millisecond)
-	setMsg(msgOk)
+	for _, e := range syncSequence {
+		setMsg(e.msg)
+		l.Write([]byte(e.log + "\n"))
+		time.Sleep(e.duration)
+	}
+	setMsg(msgIdle)
 	l.Write([]byte("Sync finished\n"))
 	symLock.Unlock()
 }
@@ -68,21 +81,12 @@ func simulateSync(l io.Writer) {
 func simulateStart(l io.Writer) {
 	// start sequence
 	symLock.Lock()
-	setMsg(" ")
-	time.Sleep(time.Duration(event1) * time.Millisecond)
-	setMsg(msgStart1)
-	l.Write([]byte("Start simulation 2\n"))
-	time.Sleep(time.Duration(event2) * time.Millisecond)
-	setMsg(msgStart2)
-	l.Write([]byte("Start simulation 3\n"))
-	time.Sleep(time.Duration(event3) * time.Millisecond)
-	setMsg(msgStart3)
-	l.Write([]byte("Start simulation 4\n"))
-	time.Sleep(time.Duration(event4) * time.Millisecond)
-	setMsg(msgStart2)
-	l.Write([]byte("Start simulation 5\n"))
-	time.Sleep(time.Duration(event5) * time.Millisecond)
-	setMsg(msgOk)
+	for _, e := range startSequence {
+		setMsg(e.msg)
+		l.Write([]byte(e.log + "\n"))
+		time.Sleep(e.duration)
+	}
+	setMsg(msgIdle)
 	l.Write([]byte("Start simulation finished\n"))
 	symLock.Unlock()
 }
