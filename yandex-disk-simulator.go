@@ -92,7 +92,7 @@ func simulateStart(l io.Writer) {
 }
 
 func setMsg(m string) {
-	// thread sa
+	// thread safe message update
 	msgLock.Lock()
 	message = m
 	msgLock.Unlock()
