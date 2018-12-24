@@ -134,7 +134,10 @@ Commands:
 	status	get the daemon status
 	sync	begin the synchronisation events simulation 
 Simulator commands:
-	daemon	start as a daemon (dont use it)`)
+	daemon	start as a daemon (don't use it)
+Environment variables:
+	DEBUG_SyncDir	can be used to set synchronized directory path (default: ~/Yandex.Disk)
+	DEBUG_ConfDir	can be used to set configuration directory path (default: ~/.config/yandex-disk)`)
 			//	case "status", "stop":
 			//		if notExists(expandHome("~/Yandex.Disk")) {
 			//			fmt.Println("Error: Indicated directory does not exist")
@@ -172,15 +175,21 @@ func daemon() {
 	if err != nil {
 		log.Fatal("syscall.Setsid() error:", err)
 	}
-	// create ~/Yandex.Disk/.sync/cli.log if it is not exists
-	err = os.MkdirAll(os.ExpandEnv("$HOME/Yandex.Disk/.sync"), 0755)
+	// create ~/<SyncDir>/.sync/cli.log if it is not exists
+	syncDir := os.Getenv("DEBUG_SyncDir")
+	if syncDir == "" {
+		syncDir = "$HOME/Yandex.Disk"
+	}
+	logPath := filepath.Join(os.ExpandEnv(syncDir), ".sync")
+	err = os.MkdirAll(logPath, 0755)
 	if err != nil {
-		log.Fatal("~/Yandex.Disk/.sync creation error:", err)
+		log.Fatal(logPath+" creation error:", err)
 	}
 	// open logfile
-	logfile, err := os.OpenFile(os.ExpandEnv("$HOME/Yandex.Disk/.sync/cli.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0755)
+	logFilePath := filepath.Join(logPath, "cli.log")
+	logfile, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
-		log.Fatal("~/Yandex.Disk/.sync/cli.log opening error:", err)
+		log.Fatal(logFilePath+" opening error:", err)
 	}
 	defer func() {
 		logfile.Write([]byte("exit\n"))
@@ -264,7 +273,13 @@ func socketSend(cmd string) {
 }
 
 func checkCfg() {
-	f, err := os.Open(os.ExpandEnv("$HOME/.config/yandex-disk/config.cfg"))
+	confDir := os.Getenv("DEBUG_ConfDir")
+	if confDir == "" {
+		confDir = "$HOME/.config/yandex-disk"
+	}
+	confFile := filepath.Join(os.ExpandEnv(confDir), "config.cfg")
+	log.Println("Config file: ", confFile)
+	f, err := os.Open(confFile)
 	if err != nil {
 		fmt.Println("Error: option 'dir' is missing --")
 		os.Exit(1)
