@@ -38,7 +38,7 @@ var (
 		Event{"Synchronization core status: paused\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			The quota has not been received yet.\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	",
 			time.Duration(250) * time.Millisecond,
 			"Start simulation 1"},
-		Event{"Synchronization core status: index\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			The quota has not been received yet.\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	",
+		Event{"Synchronization core status: index\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			The quota has not been received yet.\n	\n	",
 			time.Duration(600) * time.Millisecond,
 			"Start simulation 2"},
 		Event{"Synchronization core status: busy\n	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n			The quota has not been received yet.\n	Last synchronized items:\n			file: 'File.ods'\n			file: 'downloads/file.deb'\n			file: 'downloads/setup'\n			file: 'download'\n			file: 'down'\n			file: 'do'\n			file: 'd'\n			file: 'o'\n			file: 'w'\n			file: 'n'\n	\n	\n	",
