@@ -22,12 +22,8 @@ Note:
 
 At the moment, this simulator doesn't handle any additional command or option of original yandex-disk utility except the commands listed above.
 
-It also expects that correct configuration file and token file was created before the start of simulator. Configuration file should be created in $Sim_ConfDir/config.cfg and token file in $Sim_ConfDir/passwd. 
+Use 
+    yandex-disk-similator prepare
+to initialize the simulation environment.
 
-The contence of the configuration file shoul looks like following example:
-
-    proxy="no"
-    auth=$DEBUG_ConfDir/passwd
-    dir=$DEBUG_SyncDir
-
-The contence of passwd file doesn't matter but file should exists.
+To use it as yandex-disk simulator consider renaming the **yandex-disk-similator** to **yandex-disk** and put it in the PATH before the original yandex-disk (if it is installed).
