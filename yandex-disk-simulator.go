@@ -139,12 +139,12 @@ Commands:
 	sync	begin the synchronisation events simulation 
 Simulator commands:
 	prepare prepare the simulation environment. It creates the cofig and token files in 
-			$DEBUG_ConfDir path and syncronized directory as $DEBUG_SyncDir.
-			Environment variables DEBUG_ConfDir and DEBUG_SyncDir should be set in advance.
+			$Sim_ConfDir path and syncronized directory as $Sim_SyncDir.
+			Environment variables Sim_ConfDir and Sim_SyncDir should be set in advance.
 	daemon	start as a daemon (don't use it)
 Environment variables:
-	DEBUG_SyncDir	can be used to set synchronized directory path (default: ~/Yandex.Disk)
-	DEBUG_ConfDir	can be used to set configuration directory path (default: ~/.config/yandex-disk)`)
+	Sim_SyncDir	can be used to set synchronized directory path (default: ~/Yandex.Disk)
+	Sim_ConfDir	can be used to set configuration directory path (default: ~/.config/yandex-disk)`)
 			//	case "status", "stop":
 			//		if notExists(expandHome("~/Yandex.Disk")) {
 			//			fmt.Println("Error: Indicated directory does not exist")
@@ -153,12 +153,12 @@ Environment variables:
 			//			socketSend(cmd)
 			//		}
 		case "prepare":
-			CfgPath := os.Getenv("DEBUG_ConfDir")
-			SyncDir := os.Getenv("DEBUG_SyncDir")
+			CfgPath := os.Getenv("Sim_ConfDir")
+			SyncDir := os.Getenv("Sim_SyncDir")
 			fmt.Println(CfgPath, SyncDir, os.Environ())
 			if CfgPath == "" || SyncDir == "" {
 				fmt.Println(`Prepare command require two environment variable to be set:
-DEBUG_SyncDir and DEBUG_ConfDir. See help for details about them.`)
+Sim_SyncDir and Sim_ConfDir. See help for details about them.`)
 				os.Exit(1)
 			}
 			err := os.MkdirAll(CfgPath, 0777)
@@ -222,7 +222,7 @@ func daemon() {
 		log.Fatal("syscall.Setsid() error:", err)
 	}
 	// create ~/<SyncDir>/.sync/cli.log if it is not exists
-	syncDir := os.Getenv("DEBUG_SyncDir")
+	syncDir := os.Getenv("Sim_SyncDir")
 	if syncDir == "" {
 		syncDir = "$HOME/Yandex.Disk"
 	}
@@ -319,7 +319,7 @@ func socketSend(cmd string) {
 }
 
 func checkCfg() {
-	confDir := os.Getenv("DEBUG_ConfDir")
+	confDir := os.Getenv("Sim_ConfDir")
 	if confDir == "" {
 		confDir = "$HOME/.config/yandex-disk"
 	}
