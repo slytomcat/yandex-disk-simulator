@@ -10,16 +10,19 @@ yandex-disk-simulator is a yandex-disk utility simulator for integration tests (
     	sync	begin the synchronisation events simulation 
     	help	get this message
     Simulator commands:
+        prepare prepare the simulation environment. It creates the cofig and token files in 
+			    $Sim_ConfDir path and syncronized directory as $Sim_SyncDir.
+			    Environment variables Sim_ConfDir and Sim_SyncDir should be set in advance.
     	daemon	start as a daemon (don't use it)
     Environment variables:
-    	DEBUG_SyncDir	can be used to set synchronized directory path (default: ~/Yandex.Disk)
-    	DEBUG_ConfDir	can be used to set configuration directory path (default: ~/.config/yandex-disk)
+    	Sim_SyncDir	can be used to set synchronized directory path (default: ~/Yandex.Disk)
+    	Sim_ConfDir	can be used to set configuration directory path (default: ~/.config/yandex-disk)
 
 Note:
 
 At the moment, this simulator doesn't handle any additional command or option of original yandex-disk utility except the commands listed above.
 
-It also expects that correct configuration file and token file was created before the start of simulator. Configuration file should be created in $DEBUG_ConfDir/config.cfg and token file in $DEBUG_ConfDir/passwd. 
+It also expects that correct configuration file and token file was created before the start of simulator. Configuration file should be created in $Sim_ConfDir/config.cfg and token file in $Sim_ConfDir/passwd. 
 
 The contence of the configuration file shoul looks like following example:
 
