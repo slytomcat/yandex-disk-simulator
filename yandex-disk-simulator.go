@@ -138,6 +138,9 @@ Commands:
 	status	get the daemon status
 	sync	begin the synchronisation events simulation 
 Simulator commands:
+	prepare prepare the simulation environment. It creates the cofig and token files in 
+			$DEBUG_ConfDir path and syncronized directory as $DEBUG_SyncDir.
+			Environment variables DEBUG_ConfDir and DEBUG_SyncDir should be set in advance.
 	daemon	start as a daemon (don't use it)
 Environment variables:
 	DEBUG_SyncDir	can be used to set synchronized directory path (default: ~/Yandex.Disk)
@@ -149,6 +152,45 @@ Environment variables:
 			//		} else {
 			//			socketSend(cmd)
 			//		}
+		case "prepare":
+			CfgPath := os.Getenv("DEBUG_ConfDir")
+			SyncDir := os.Getenv("DEBUG_SyncDir")
+			fmt.Println(CfgPath, SyncDir, os.Environ())
+			if CfgPath == "" || SyncDir == "" {
+				fmt.Println(`Prepare command require two environment variable to be set:
+DEBUG_SyncDir and DEBUG_ConfDir. See help for details about them.`)
+				os.Exit(1)
+			}
+			err := os.MkdirAll(CfgPath, 0777)
+			if err != nil {
+				log.Fatal("Config path creation error")
+			}
+			auth := filepath.Join(CfgPath, "passwd")
+			if notExists(auth) {
+				tfile, err := os.OpenFile(auth, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0666)
+				if err != nil {
+					log.Fatal("yandex-disk token file creation error:", err)
+				}
+				defer tfile.Close()
+				_, err = tfile.Write([]byte("token")) // yandex-disk-simulator doesn't require the real token
+				if err != nil {
+					log.Fatal("yandex-disk token file creation error:", err)
+				}
+			}
+			Cfg := filepath.Join(CfgPath, "config.cfg")
+			cfile, err := os.OpenFile(Cfg, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0666)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer cfile.Close()
+			_, err = cfile.Write([]byte("proxy=\"no\"\nauth=\"" + auth + "\"\ndir=\"" + SyncDir + "\"\n\n"))
+			if err != nil {
+				log.Fatal("Can't create config file: ", err)
+			}
+			err = os.MkdirAll(SyncDir, 0777)
+			if err != nil {
+				log.Fatal("synchronization Dir creation error:", err)
+			}
 		default:
 			socketSend(cmd)
 		}
