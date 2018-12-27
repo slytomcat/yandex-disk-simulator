@@ -22,8 +22,9 @@ Note:
 
 At the moment, this simulator doesn't handle any additional command or option of original yandex-disk utility except the commands listed above.
 
-Use 
+In order to prepare simulator and it's environment do the folloving steps:
+1. set Sim_SyncDir (synchronized directory path) and Sim_ConfDir (configuration directory path) environment variables.
+2. run 
     yandex-disk-similator prepare
-to initialize the simulation environment.
 
 To use it as yandex-disk simulator consider renaming the **yandex-disk-similator** to **yandex-disk** and put it in the PATH before the original yandex-disk (if it is installed).
