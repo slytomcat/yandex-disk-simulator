@@ -5,4 +5,16 @@ jobs:
       - image: circleci/golang:1.11.4
     steps:
       - checkout
-      - run: go test -v ./...
+      - run:
+          name: Prepare
+          command: |
+            go get -u github.com/jstemmer/go-junit-report;
+            mkdir results;
+      - run: go test -v -race -coverprofile cover.out 2>&1 | tee /dev/tty | go-junit-report > results/results.xml
+      - run: 
+          name: Format coverage
+          command: go tool cover -html=cover.out -o coverage.html
+      - store_artifacts:
+          path: coverage.html
+      - store_test_results:
+          path: results
