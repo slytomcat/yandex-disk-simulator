@@ -1,4 +1,6 @@
 # yandex-disk-simulator
+[![CircleCI](https://circleci.com/gh/slytomcat/yandex-disk-simulator.svg?style=svg)](https://circleci.com/gh/slytomcat/yandex-disk-simulator)
+
 yandex-disk-simulator is a yandex-disk utility simulator for integration tests (Linux).
 
     Usage:
