@@ -138,9 +138,9 @@ Commands:
 	status	get the daemon status
 	sync	begin the synchronisation events simulation 
 Simulator commands:
-	prepare prepare the simulation environment. It creates the cofig and token files in 
-			$Sim_ConfDir path and syncronized directory as $Sim_SyncDir.
-			Environment variables Sim_ConfDir and Sim_SyncDir should be set in advance.
+	prepare prepares the simulation environment. It creates the cofig and token files in 
+		$Sim_ConfDir path and syncronized directory as $Sim_SyncDir.
+		Environment variables Sim_ConfDir and Sim_SyncDir should be set in advance.
 	daemon	start as a daemon (don't use it)
 Environment variables:
 	Sim_SyncDir	can be used to set synchronized directory path (default: ~/Yandex.Disk)
@@ -202,6 +202,8 @@ func daemonize() {
 	_, exe := filepath.Split(os.Args[0])
 	// execute it with daemon command
 	cmd := exec.Command(exe, "daemon")
+	//cmd.Stdout = os.Stderr
+	//cmd.Stderr = os.Stderr
 	err := cmd.Start()
 	if err != nil {
 		log.Fatal(err)
