@@ -22,8 +22,8 @@ type Event struct {
 }
 
 const (
-	daemonLogFile = "/tmp/yandexdiskmock.log"
-	socketPath    = "/tmp/yandexdisksym.socket"
+	daemonLogFile = "/tmp/yandexdisksymulator.log"
+	socketPath    = "/tmp/yandexdisksymulator.socket"
 )
 
 var (
