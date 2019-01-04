@@ -142,7 +142,8 @@ Commands:
 	start	starts the daemon and begin starting events simulation
 	stop	stops the daemon
 	status	get the daemon status
-	sync	begin the synchronisation events simulation 
+	sync	begin the synchronisation events simulation
+	help    show this help message 
 	setup 	prepares the simulation environment. It creates the cofiguration and 
 		token files in Sim_ConfDir and the syncronization directory in Sim_SyncDir.
 		Environment variables Sim_ConfDir and Sim_SyncDir should be set in advance, 
