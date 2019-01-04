@@ -45,7 +45,7 @@ func Example01StartWithoutCommand() {
 	// or setup to launch the setup wizard.
 }
 
-func Example02StartUnconfigured() {
+func Example05StartUnconfigured() {
 	cmd := exec.Command("yandex-disk-simulator", "start")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout
@@ -54,7 +54,7 @@ func Example02StartUnconfigured() {
 	// Error: option 'dir' is missing --
 }
 
-func Example03StartSetup() {
+func Example10StartSetup() {
 	cmd := exec.Command("yandex-disk-simulator", "setup")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout
@@ -63,7 +63,7 @@ func Example03StartSetup() {
 	//
 }
 
-func Example04StartSuccess() {
+func Example20StartSuccess() {
 	cmd := exec.Command("yandex-disk-simulator", "start")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout
@@ -72,11 +72,29 @@ func Example04StartSuccess() {
 	// Starting daemon process...Done
 }
 
-func Example05SecondStart() {
+func Example25SecondStart() {
 	cmd := exec.Command("yandex-disk-simulator", "start")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout
 	cmd.Run()
 	// Output:
 	// Daemon is already running.
+}
+
+func Example90Stop() {
+	cmd := exec.Command("yandex-disk-simulator", "stop")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
+	cmd.Run()
+	// Output:
+	// Daemon stopped.
+}
+
+func Example90SecondaryStop() {
+	cmd := exec.Command("yandex-disk-simulator", "stop")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
+	cmd.Run()
+	// Output:
+	// Error: daemon not started
 }
