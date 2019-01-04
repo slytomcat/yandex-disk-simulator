@@ -3,6 +3,18 @@
 
 **yandex-disk-simulator** is a *yandex-disk* utility simulator for integration tests (Linux).
 
+**Requerements:** 
+ - go v.1.x and higher
+
+**Buiding:**
+
+    go get -d github.com/slytomcat/yandex-disk-simulator
+    go build yandex-disk-simulator
+
+**Usage**
+
+Help message:
+
     Usage:
     	yandex-disk-similator <cmd>
     Commands:
