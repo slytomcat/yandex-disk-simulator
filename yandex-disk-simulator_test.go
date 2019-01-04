@@ -99,19 +99,20 @@ func Example50StatusAfter600MSeconds() {
 	cmd.Run()
 	// Output:
 	// Synchronization core status: paused
-	// 	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
-	// 			The quota has not been received yet.
-	// 	Last synchronized items:
-	// 			file: 'File.ods'
-	// 			file: 'downloads/file.deb'
-	// 			file: 'downloads/setup'
-	// 			file: 'download'
-	// 			file: 'down'
-	// 			file: 'do'
-	// 			file: 'd'
-	// 			file: 'o'
-	// 			file: 'w'
-	// 			file: 'n'
+	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
+	// 	The quota has not been received yet.
+	//
+	// Last synchronized items:
+	// 	file: 'File.ods'
+	// 	file: 'downloads/file.deb'
+	// 	file: 'downloads/setup'
+	// 	file: 'download'
+	// 	file: 'down'
+	// 	file: 'do'
+	// 	file: 'd'
+	// 	file: 'o'
+	// 	file: 'w'
+	// 	file: 'n'
 }
 
 func Example60StatusAfter6Seconds() {
@@ -122,25 +123,24 @@ func Example60StatusAfter6Seconds() {
 	cmd.Run()
 	// Output:
 	// Synchronization core status: idle
-	// 	Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
-	// 			Total: 43.50 GB
-	// 			Used: 2.89 GB
-	// 			Available: 40.61 GB
-	// 		Max file size: 50 GB
-	// 			Trash size: 0 B
+	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
+	// 	Total: 43.50 GB
+	// 	Used: 2.89 GB
+	// 	Available: 40.61 GB
+	// 	Max file size: 50 GB
+	// 	Trash size: 0 B
 	//
-	// 	Last synchronized items:
-	// 			file: 'File.ods'
-	// 			file: 'downloads/file.deb'
-	// 			file: 'downloads/setup'
-	// 			file: 'download'
-	// 			file: 'down'
-	// 			file: 'do'
-	// 			file: 'd'
-	// 			file: 'o'
-	// 			file: 'w'
-	// 			file: 'n'
-	//
+	// Last synchronized items:
+	// 	file: 'File.ods'
+	// 	file: 'downloads/file.deb'
+	// 	file: 'downloads/setup'
+	// 	file: 'download'
+	// 	file: 'down'
+	// 	file: 'do'
+	// 	file: 'd'
+	// 	file: 'o'
+	// 	file: 'w'
+	// 	file: 'n'
 }
 
 func Example70Sync() {
@@ -150,6 +150,34 @@ func Example70Sync() {
 	cmd.Run()
 	// Output:
 	//
+}
+
+func Example80StatusAfterHalfSeconds() {
+	time.Sleep(500 * time.Millisecond)
+	cmd := exec.Command("yandex-disk-simulator", "status")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
+	cmd.Run()
+	// Output:
+	// Synchronization core status: index
+	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
+	// 	Total: 43.50 GB
+	// 	Used: 2.89 GB
+	// 	Available: 40.61 GB
+	// 	Max file size: 50 GB
+	// 	Trash size: 0 B
+	//
+	// Last synchronized items:
+	// 	file: 'File.ods'
+	// 	file: 'downloads/file.deb'
+	// 	file: 'downloads/setup'
+	// 	file: 'download'
+	// 	file: 'down'
+	// 	file: 'do'
+	// 	file: 'd'
+	// 	file: 'o'
+	// 	file: 'w'
+	// 	file: 'n'
 }
 
 func Example90Stop() {
