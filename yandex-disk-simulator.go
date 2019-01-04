@@ -107,6 +107,12 @@ func notExists(path string) bool {
 }
 
 func main() {
+	dlog, err := os.OpenFile("/tmp/yandexdiskmock.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0755)
+	if err != nil {
+		log.Fatal("/tmp/yandexdiskmock.log opening error:", err)
+	}
+	defer dlog.Close()
+	log.SetOutput(dlog)
 	// check config file
 	if len(os.Args) == 1 {
 		fmt.Println("Error: command hasn't been specified. Use the --help command to access help\nor setup to launch the setup wizard.")
@@ -137,11 +143,13 @@ Commands:
 	stop	stops the daemon
 	status	get the daemon status
 	sync	begin the synchronisation events simulation 
+	setup 	prepares the simulation environment. It creates the cofiguration and 
+		token files in Sim_ConfDir and the syncronization directory in Sim_SyncDir.
+		Environment variables Sim_ConfDir and Sim_SyncDir should be set in advance, 
+		otherways the default paths will be used.
+		Setup process doesn't requere any input in the terminal.
 Simulator commands:
-	prepare prepares the simulation environment. It creates the cofig and token files in 
-		$Sim_ConfDir path and syncronized directory as $Sim_SyncDir.
-		Environment variables Sim_ConfDir and Sim_SyncDir should be set in advance.
-	daemon	start as a daemon (don't use it)
+	daemon	start as a daemon (Don't use it !!!)
 Environment variables:
 	Sim_SyncDir	can be used to set synchronized directory path (default: ~/Yandex.Disk)
 	Sim_ConfDir	can be used to set configuration directory path (default: ~/.config/yandex-disk)`)
@@ -152,14 +160,14 @@ Environment variables:
 			//		} else {
 			//			socketSend(cmd)
 			//		}
-		case "prepare":
+		case "setup":
 			CfgPath := os.Getenv("Sim_ConfDir")
+			if CfgPath == "" {
+				CfgPath = os.ExpandEnv("$HOME/Yandex.Disk")
+			}
 			SyncDir := os.Getenv("Sim_SyncDir")
-			fmt.Println(CfgPath, SyncDir, os.Environ())
-			if CfgPath == "" || SyncDir == "" {
-				fmt.Println(`Prepare command require two environment variable to be set:
-Sim_SyncDir and Sim_ConfDir. See help for details about them.`)
-				os.Exit(1)
+			if SyncDir == "" {
+				SyncDir = os.ExpandEnv("$HOME/.config/yandex-disk")
 			}
 			err := os.MkdirAll(CfgPath, 0777)
 			if err != nil {
