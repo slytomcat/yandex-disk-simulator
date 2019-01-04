@@ -22,7 +22,7 @@ type Event struct {
 }
 
 var (
-	socketPath = "/tmp/yandexdiskmock.socket"
+	socketPath = "/tmp/yandexdisksym.socket"
 	startTime  = 1000
 
 	message          = " "
@@ -113,7 +113,6 @@ func main() {
 	}
 	defer dlog.Close()
 	log.SetOutput(dlog)
-	// check config file
 	if len(os.Args) == 1 {
 		fmt.Println("Error: command hasn't been specified. Use the --help command to access help\nor setup to launch the setup wizard.")
 		os.Exit(1)
