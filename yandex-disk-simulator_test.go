@@ -18,8 +18,7 @@ func TestMain(m *testing.M) {
 
 	exec.Command("go", "build", "yandex-disk-simulator.go").Run()
 	cwd, _ := os.Getwd()
-	path := os.Getenv("PATH")
-	os.Setenv("PATH", cwd+":"+path)
+	os.Setenv("PATH", cwd+":"+os.Getenv("PATH"))
 	SyncDirPath = os.ExpandEnv(SyncDirPath)
 	os.Setenv("Sim_SyncDir", SyncDirPath)
 	ConfigFilePath = os.ExpandEnv(ConfigFilePath)
