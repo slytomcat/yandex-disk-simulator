@@ -132,8 +132,7 @@ func main() {
 		fmt.Println("Error: command hasn't been specified. Use the --help command to access help\nor setup to launch the setup wizard.")
 		os.Exit(1)
 	}
-	loggingFile := initLog()
-	defer loggingFile.Close()
+	defer initLog().Close()
 	cmd := os.Args[1]
 	if len(cmd) > 8 {
 		cmd = cmd[0:8]
@@ -178,8 +177,6 @@ func daemonize() {
 }
 
 func daemon() {
-	loggingFile := initLog()
-	defer loggingFile.Close()
 	log.Println("Daemon started")
 	defer log.Println("Daemon stopped")
 	// disconnect from terminal
@@ -212,7 +209,6 @@ func daemon() {
 	if err != nil {
 		log.Fatal("Listen error: ", err)
 	}
-	// defer closing of socket
 	defer ln.Close()
 
 	// begin start simulation
@@ -220,12 +216,12 @@ func daemon() {
 
 	buf := make([]byte, 8)
 	for {
-		// accept and read next command from socket
-		fd, err := ln.Accept()
+		// accept next command from socket
+		conn, err := ln.Accept()
 		if err != nil {
 			return
 		}
-		nr, err := fd.Read(buf)
+		nr, err := conn.Read(buf)
 		if err != nil {
 			return
 		}
@@ -235,15 +231,17 @@ func daemon() {
 		switch cmd {
 		case "status": // replay to socket by current message
 			msgLock.Lock()
-			fd.Write([]byte(message))
+			conn.Write([]byte(message))
 			msgLock.Unlock()
 		case "sync": // begin the synchronization simulation
 			go simulate("Synchronization", syncSequence, logfile)
-			fd.Write([]byte(" "))
+			conn.Write([]byte(" "))
 		case "stop": // stop the daemon
+			conn.Close()
 			return
 			//default: there is no other options (should be) possible
 		}
+		conn.Close()
 	}
 }
 
