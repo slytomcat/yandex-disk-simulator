@@ -2,10 +2,14 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 var (
@@ -33,6 +37,27 @@ func TestMain(m *testing.M) {
 	os.RemoveAll(SyncDirPath)
 
 	os.Exit(e)
+}
+
+func getLogEvent(timeout time.Duration) error {
+	watch, err := fsnotify.NewWatcher()
+	if err != nil {
+		return err
+	}
+	defer watch.Close()
+	err = watch.Add(filepath.Join(SyncDirPath, ".sync/cli.log"))
+	if err != nil {
+		//log.Debug("Watch path error:", err)
+		return err
+	}
+	select {
+	case err := <-watch.Errors:
+		return err
+	case <-watch.Events:
+		return nil
+	case <-time.After(timeout):
+		return fmt.Errorf("Timeout")
+	}
 }
 
 func Example01StartWithoutCommand() {
@@ -90,8 +115,10 @@ func Example40StatusAfterStart() {
 	//
 }
 
-func Example50StatusAfter600MSeconds() {
-	time.Sleep(600 * time.Millisecond)
+func Example45StatusAfter1stEvent() {
+	if getLogEvent(time.Duration(2*time.Second)) != nil {
+		return
+	}
 	cmd := exec.Command("yandex-disk-simulator", "status")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout
@@ -114,8 +141,76 @@ func Example50StatusAfter600MSeconds() {
 	// 	file: 'n'
 }
 
-func Example60StatusAfter6Seconds() {
-	time.Sleep(6000 * time.Millisecond)
+func Example50StatusAfter2ndEvent() {
+	if getLogEvent(time.Duration(2*time.Second)) != nil {
+		return
+	}
+	cmd := exec.Command("yandex-disk-simulator", "status")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
+	cmd.Run()
+	// Output:
+	// Synchronization core status: index
+	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
+	// 	The quota has not been received yet.
+}
+
+func Example55StatusAfter3rdEvent() {
+	if getLogEvent(time.Duration(2*time.Second)) != nil {
+		return
+	}
+	cmd := exec.Command("yandex-disk-simulator", "status")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
+	cmd.Run()
+	// Output:
+	// Synchronization core status: busy
+	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
+	// 	The quota has not been received yet.
+	//
+	// Last synchronized items:
+	// 	file: 'File.ods'
+	// 	file: 'downloads/file.deb'
+	// 	file: 'downloads/setup'
+	// 	file: 'download'
+	// 	file: 'down'
+	// 	file: 'do'
+	// 	file: 'd'
+	// 	file: 'o'
+	// 	file: 'w'
+	// 	file: 'n'
+}
+
+func Example60StatusAfter4rdEvent() {
+	if getLogEvent(time.Duration(2*time.Second)) != nil {
+		return
+	}
+	cmd := exec.Command("yandex-disk-simulator", "status")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
+	cmd.Run()
+	// Output:
+	// Synchronization core status: index
+	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
+	// 	The quota has not been received yet.
+	//
+	// Last synchronized items:
+	// 	file: 'File.ods'
+	// 	file: 'downloads/file.deb'
+	// 	file: 'downloads/setup'
+	// 	file: 'download'
+	// 	file: 'down'
+	// 	file: 'do'
+	// 	file: 'd'
+	// 	file: 'o'
+	// 	file: 'w'
+	// 	file: 'n'
+}
+
+func Example65StatusAfter5rdEvent() {
+	if getLogEvent(time.Duration(6*time.Second)) != nil {
+		return
+	}
 	cmd := exec.Command("yandex-disk-simulator", "status")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout
@@ -151,8 +246,7 @@ func Example70Sync() {
 	//
 }
 
-func Example80StatusAfterHalfSeconds() {
-	time.Sleep(500 * time.Millisecond)
+func Example75StatusAfterSyncStart() {
 	cmd := exec.Command("yandex-disk-simulator", "status")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout
@@ -179,8 +273,41 @@ func Example80StatusAfterHalfSeconds() {
 	// 	file: 'n'
 }
 
-func Example85StatusAfterASecond() {
-	time.Sleep(500 * time.Millisecond)
+func Example80StatusAfter2ndEvent() {
+	if getLogEvent(time.Duration(2*time.Second)) != nil {
+		return
+	}
+	cmd := exec.Command("yandex-disk-simulator", "status")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
+	cmd.Run()
+	// Output:
+	// Sync progress: 0 MB/ 139.38 MB (0 %)
+	// Synchronization core status: busy
+	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
+	// 	Total: 43.50 GB
+	// 	Used: 2.89 GB
+	// 	Available: 40.61 GB
+	// 	Max file size: 50 GB
+	// 	Trash size: 0 B
+	//
+	// Last synchronized items:
+	// 	file: 'File.ods'
+	// 	file: 'downloads/file.deb'
+	// 	file: 'downloads/setup'
+	// 	file: 'download'
+	// 	file: 'down'
+	// 	file: 'do'
+	// 	file: 'd'
+	// 	file: 'o'
+	// 	file: 'w'
+	// 	file: 'n'
+}
+
+func Example85StatusAfter3rdEvent() {
+	if getLogEvent(time.Duration(1*time.Second)) != nil {
+		return
+	}
 	cmd := exec.Command("yandex-disk-simulator", "status")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout
@@ -208,8 +335,41 @@ func Example85StatusAfterASecond() {
 	// 	file: 'n'
 }
 
-func Example85StatusAfter4Seconds() {
-	time.Sleep(3000 * time.Millisecond)
+func Example87StatusAfter4rdEvent() {
+	if getLogEvent(time.Duration(3*time.Second)) != nil {
+		return
+	}
+	cmd := exec.Command("yandex-disk-simulator", "status")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
+	cmd.Run()
+	// Output:
+	// Sync progress: 139.38 MB/ 139.38 MB (100 %)
+	// Synchronization core status: index
+	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
+	// 	Total: 43.50 GB
+	// 	Used: 2.89 GB
+	// 	Available: 40.61 GB
+	// 	Max file size: 50 GB
+	// 	Trash size: 0 B
+	//
+	// Last synchronized items:
+	// 	file: 'NewFile'
+	// 	file: 'File.ods'
+	// 	file: 'downloads/file.deb'
+	// 	file: 'downloads/setup'
+	// 	file: 'download'
+	// 	file: 'down'
+	// 	file: 'do'
+	// 	file: 'd'
+	// 	file: 'o'
+	// 	file: 'w'
+}
+
+func Example88StatusAfter5rdEvent() {
+	if getLogEvent(time.Duration(1*time.Second)) != nil {
+		return
+	}
 	cmd := exec.Command("yandex-disk-simulator", "status")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stdout
