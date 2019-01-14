@@ -66,7 +66,7 @@ func TestDoMain02WrongCommand(t *testing.T) {
 	}
 }
 
-func TestDoMain03StartNoConfig(t *testing.T) {
+func TestDoMain04StartNoConfig(t *testing.T) {
 	err := doMain([]string{"yandex-disk-simulator", "start"})
 	if err == nil {
 		t.Error("no error for start without config")
@@ -76,10 +76,20 @@ func TestDoMain03StartNoConfig(t *testing.T) {
 	}
 }
 
-func TestDoMain04Setup(t *testing.T) {
+func TestDoMain05Setup(t *testing.T) {
 	err := doMain([]string{"yandex-disk-simulator", "setup"})
 	if err != nil {
 		t.Error("error for setup :", err)
+	}
+}
+
+func TestDoMain07Command2NotStarted(t *testing.T) {
+	err := doMain([]string{"yandex-disk-simulator", "status"})
+	if err == nil {
+		t.Error("no error for command to not started")
+	}
+	if err.Error() != "Error: daemon not started" {
+		t.Error("incorrect message for command to not started case: " + err.Error())
 	}
 }
 
@@ -96,14 +106,14 @@ func testCmdWithCapture(cmd string, t *testing.T) string {
 	os.Stdout = stdOut
 	return string(out)
 }
-func TestDoMain05StartSuccess(t *testing.T) {
+func TestDoMain06StartSuccess(t *testing.T) {
 	res := testCmdWithCapture("start", t)
 	if res != "Starting daemon process...Done\n" {
 		t.Error("incorrect message for start without config case:", res)
 	}
 }
 
-func TestDoMain06StartSecondary(t *testing.T) {
+func TestDoMain07StartSecondary(t *testing.T) {
 	res := testCmdWithCapture("start", t)
 	if res != "Daemon is already running.\n" {
 		t.Error("incorrect message for secondary start case:", res)
@@ -352,6 +362,34 @@ func Example87StatusAfter4rdEvent() {
 
 func Example88StatusAfter5rdEvent() {
 	getStatusAfterEvent(time.Duration(1 * time.Second))
+	// Output:
+	// Synchronization core status: idle
+	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
+	// 	Total: 43.50 GB
+	// 	Used: 2.89 GB
+	// 	Available: 40.61 GB
+	// 	Max file size: 50 GB
+	// 	Trash size: 0 B
+	//
+	// Last synchronized items:
+	// 	file: 'File.ods'
+	// 	file: 'downloads/file.deb'
+	// 	file: 'downloads/setup'
+	// 	file: 'download'
+	// 	file: 'down'
+	// 	file: 'do'
+	// 	file: 'd'
+	// 	file: 'o'
+	// 	file: 'w'
+	// 	file: 'n'
+}
+
+func Example89StatusInEnv() {
+	exe, _ := exec.LookPath("yandex-disk-simulator")
+	cmd := exec.Command("env", "-i", exe, "status")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
+	cmd.Run()
 	// Output:
 	// Synchronization core status: idle
 	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
