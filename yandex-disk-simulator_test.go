@@ -57,7 +57,7 @@ func TestDoMain01Help(t *testing.T) {
 }
 
 func TestDoMain02WrongCommand(t *testing.T) {
-	err := doMain([]string{"yandex-disk-simulator", "wrongCMD_cut it"})
+	err := doMain([]string{"yandex-disk-simulator", "wrongCMD_cut_it"})
 	if err == nil {
 		t.Error("no error for wrong command")
 	}
@@ -106,21 +106,21 @@ func testCmdWithCapture(cmd string, t *testing.T) string {
 	os.Stdout = stdOut
 	return string(out)
 }
-func TestDoMain06StartSuccess(t *testing.T) {
+func TestDoMain10StartSuccess(t *testing.T) {
 	res := testCmdWithCapture("start", t)
 	if res != "Starting daemon process...Done\n" {
 		t.Error("incorrect message for start without config case:", res)
 	}
 }
 
-func TestDoMain07StartSecondary(t *testing.T) {
+func TestDoMain11StartSecondary(t *testing.T) {
 	res := testCmdWithCapture("start", t)
 	if res != "Daemon is already running.\n" {
 		t.Error("incorrect message for secondary start case:", res)
 	}
 }
 
-func TestDoMain10StartDaemon(t *testing.T) {
+func TestDoMain15StartDaemon(t *testing.T) {
 	// stop already executed daemon
 	exec.Command("yandex-disk-simulator", "stop").Run()
 	// start daemon in separate gorutine
@@ -128,7 +128,7 @@ func TestDoMain10StartDaemon(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 }
 
-func TestDoMain15Status(t *testing.T) {
+func TestDoMain17Status(t *testing.T) {
 	res := testCmdWithCapture("status", t)
 	if res != "" {
 		t.Error("incorrect message for status case:", res)
