@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -12,7 +13,6 @@ import (
 	"sync"
 	"syscall"
 	"time"
-	"bufio"
 )
 
 // Event - the stucture for change event
@@ -197,6 +197,10 @@ func daemon() error {
 	if err != nil {
 		return fmt.Errorf("syscall.Setsid() error : %v", err)
 	}
+	err = checkCfg()
+	if err != nil {
+		return err
+	}
 	// create ~/<SyncDir>/.sync/cli.log if it is not exists
 	syncDir := os.Getenv("Sim_SyncDir")
 	if syncDir == "" {
@@ -259,10 +263,6 @@ func daemon() error {
 }
 
 func socketIneract(cmd string) error {
-	err := checkCfg()
-	if err != nil {
-		return err
-	}
 	if notExists(socketPath) {
 		// output error to stdout and exit with nonzero error code
 		return fmt.Errorf("Error: daemon not started")
