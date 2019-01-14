@@ -49,27 +49,34 @@ func TestDoMain00NoCommand(t *testing.T) {
 	}
 }
 
-func TestDoMain01WrongCommand(t *testing.T) {
-	err := doMain([]string{"yandex-disk-simulator", "wrong"})
+func TestDoMain01Help(t *testing.T) {
+	res := testCmdWithCapture("help", t)
+	if res != helpMsg+"\n" {
+		t.Error("incorrect message for help case:", res)
+	}
+}
+
+func TestDoMain02WrongCommand(t *testing.T) {
+	err := doMain([]string{"yandex-disk-simulator", "wrongCMD_cut it"})
 	if err == nil {
 		t.Error("no error for wrong command")
 	}
-	if err.Error() != "Error: unknown command: 'wrong'" {
+	if err.Error() != "Error: unknown command: 'wrongCMD'" {
 		t.Error("incorrect message for wrong command case")
 	}
 }
 
-func TestDoMain02StartNoConfig(t *testing.T) {
+func TestDoMain03StartNoConfig(t *testing.T) {
 	err := doMain([]string{"yandex-disk-simulator", "start"})
 	if err == nil {
 		t.Error("no error for start without config")
 	}
-	if err.Error() != "Error: option 'dir' is missing --" {
+	if err.Error() != "Error: option 'dir' is missing" {
 		t.Error("incorrect message for start without config case")
 	}
 }
 
-func TestDoMain03Setup(t *testing.T) {
+func TestDoMain04Setup(t *testing.T) {
 	err := doMain([]string{"yandex-disk-simulator", "setup"})
 	if err != nil {
 		t.Error("error for setup :", err)
@@ -89,14 +96,14 @@ func testCmdWithCapture(cmd string, t *testing.T) string {
 	os.Stdout = stdOut
 	return string(out)
 }
-func TestDoMain04StartSuccess(t *testing.T) {
+func TestDoMain05StartSuccess(t *testing.T) {
 	res := testCmdWithCapture("start", t)
 	if res != "Starting daemon process...Done\n" {
 		t.Error("incorrect message for start without config case:", res)
 	}
 }
 
-func TestDoMain05StartSecondary(t *testing.T) {
+func TestDoMain06StartSecondary(t *testing.T) {
 	res := testCmdWithCapture("start", t)
 	if res != "Daemon is already running.\n" {
 		t.Error("incorrect message for secondary start case:", res)
@@ -115,13 +122,6 @@ func TestDoMain15Status(t *testing.T) {
 	res := testCmdWithCapture("status", t)
 	if res != "" {
 		t.Error("incorrect message for status case:", res)
-	}
-}
-
-func TestDoMain20Help(t *testing.T) {
-	res := testCmdWithCapture("help", t)
-	if res != helpMsg+"\n" {
-		t.Error("incorrect message for help case:", res)
 	}
 }
 
