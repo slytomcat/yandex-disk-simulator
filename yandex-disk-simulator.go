@@ -119,13 +119,13 @@ func notExists(path string) bool {
 	return false
 }
 
-func initLog() *os.File {
+func initLog() (*os.File, error) {
 	dlog, err := os.OpenFile(daemonLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
-		log.Fatal(daemonLogFile, "opening error:", err)
+		return nil, fmt.Errorf("%s opening error: %v", daemonLogFile, err)
 	}
 	log.SetOutput(dlog)
-	return dlog
+	return dlog, nil
 }
 
 func main() {
@@ -141,7 +141,11 @@ func doMain(args []string) error {
 	if len(args) == 1 {
 		return fmt.Errorf("%s", "Error: command hasn't been specified. Use the --help command to access help\nor setup to launch the setup wizard.")
 	}
-	defer initLog().Close()
+	daemonlfile, err := initLog()
+	if err != nil {
+		return err
+	}
+	defer daemonlfile.Close()
 	cmd := args[1]
 	if len(cmd) > 8 {
 		cmd = cmd[0:8]
