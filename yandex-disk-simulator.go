@@ -128,15 +128,15 @@ func initLog() *os.File {
 }
 
 func main() {
-	err := DoMain(os.Args)
+	err := doMain(os.Args)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 }
 
-// DoMain is main(). It is exported for tests
-func DoMain(args []string) error {
+// doMain is main(). It is for tests
+func doMain(args []string) error {
 	if len(args) == 1 {
 		return fmt.Errorf("%s", "Error: command hasn't been specified. Use the --help command to access help\nor setup to launch the setup wizard.")
 	}
@@ -149,7 +149,7 @@ func DoMain(args []string) error {
 	case "daemon":
 		return daemon()
 	case "start":
-		return daemonize()
+		return daemonize(args[0])
 	case "status", "stop", "sync":
 		// only listed commands will be passed to daemon
 		return socketIneract(cmd)
@@ -163,7 +163,7 @@ func DoMain(args []string) error {
 	}
 }
 
-func daemonize() error {
+func daemonize(exe string) error {
 	err := checkCfg()
 	if err != nil {
 		return err
@@ -174,7 +174,7 @@ func daemonize() error {
 	}
 	fmt.Print("Starting daemon process...")
 	// get executable name
-	_, exe := filepath.Split(os.Args[0])
+	_, exe = filepath.Split(exe)
 	// execute it with daemon command
 	cmd := exec.Command(exe, "daemon")
 	//cmd.Stdout = os.Stdout
