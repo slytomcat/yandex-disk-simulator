@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -39,90 +39,122 @@ func TestMain(m *testing.M) {
 	os.Exit(e)
 }
 
-func getLogEvent(timeout time.Duration) error {
+func TestDoMain00NoCommand(t *testing.T) {
+	err := doMain([]string{"yandex-disk-simulator"})
+	if err == nil {
+		t.Error("no error for no command")
+	}
+	if err.Error() != "Error: command hasn't been specified. Use the --help command to access help\nor setup to launch the setup wizard." {
+		t.Error("incorrect message for no command case")
+	}
+}
+
+func TestDoMain01WrongCommand(t *testing.T) {
+	err := doMain([]string{"yandex-disk-simulator", "wrong"})
+	if err == nil {
+		t.Error("no error for wrong command")
+	}
+	if err.Error() != "Error: unknown command: 'wrong'" {
+		t.Error("incorrect message for wrong command case")
+	}
+}
+
+func TestDoMain02StartNoConfig(t *testing.T) {
+	err := doMain([]string{"yandex-disk-simulator", "start"})
+	if err == nil {
+		t.Error("no error for start without config")
+	}
+	if err.Error() != "Error: option 'dir' is missing --" {
+		t.Error("incorrect message for start without config case")
+	}
+}
+
+func TestDoMain03Setup(t *testing.T) {
+	err := doMain([]string{"yandex-disk-simulator", "setup"})
+	if err != nil {
+		t.Error("error for setup :", err)
+	}
+}
+
+func testCmdWithCapture(cmd string, t *testing.T) string {
+	stdOut := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	err := doMain([]string{"yandex-disk-simulator", cmd})
+	if err != nil {
+		t.Error("error for ", cmd, ":", err)
+	}
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = stdOut
+	return string(out)
+}
+func TestDoMain04StartSuccess(t *testing.T) {
+	res := testCmdWithCapture("start", t)
+	if res != "Starting daemon process...Done\n" {
+		t.Error("incorrect message for start without config case:", res)
+	}
+}
+
+func TestDoMain05StartSecondary(t *testing.T) {
+	res := testCmdWithCapture("start", t)
+	if res != "Daemon is already running.\n" {
+		t.Error("incorrect message for secondary start case:", res)
+	}
+}
+
+func TestDoMain10StartDaemon(t *testing.T) {
+	// stop already executed daemon
+	exec.Command("yandex-disk-simulator", "stop").Run()
+	// start daemon in separate gorutine
+	go doMain([]string{"yandex-disk-simulator", "daemon"})
+	time.Sleep(10 * time.Millisecond)
+}
+
+func TestDoMain15Status(t *testing.T) {
+	res := testCmdWithCapture("status", t)
+	if res != "" {
+		t.Error("incorrect message for status case:", res)
+	}
+}
+
+func TestDoMain20Help(t *testing.T) {
+	res := testCmdWithCapture("help", t)
+	if res != helpMsg+"\n" {
+		t.Error("incorrect message for help case:", res)
+	}
+}
+
+func execCommand(command string) {
+	cmd := exec.Command("yandex-disk-simulator", command)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stdout
+	cmd.Run()
+}
+
+func getStatusAfterEvent(timeout time.Duration) {
 	watch, err := fsnotify.NewWatcher()
 	if err != nil {
-		return err
+		return
 	}
 	defer watch.Close()
 	err = watch.Add(filepath.Join(SyncDirPath, ".sync/cli.log"))
 	if err != nil {
-		//log.Debug("Watch path error:", err)
-		return err
+		return
 	}
 	select {
-	case err := <-watch.Errors:
-		return err
+	case <-watch.Errors:
+		return
 	case <-watch.Events:
-		return nil
+		execCommand("status")
+		return
 	case <-time.After(timeout):
-		return fmt.Errorf("Timeout")
+		return
 	}
-}
-
-func Example01StartWithoutCommand() {
-	cmd := exec.Command("yandex-disk-simulator")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
-	// Output:
-	// Error: command hasn't been specified. Use the --help command to access help
-	// or setup to launch the setup wizard.
-}
-
-func Example05StartUnconfigured() {
-	cmd := exec.Command("yandex-disk-simulator", "start")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
-	// Output:
-	// Error: option 'dir' is missing --
-}
-
-func Example10StartSetup() {
-	cmd := exec.Command("yandex-disk-simulator", "setup")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
-	// Output:
-	//
-}
-
-func Example20StartSuccess() {
-	cmd := exec.Command("yandex-disk-simulator", "start")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
-	// Output:
-	// Starting daemon process...Done
-}
-
-func Example25SecondStart() {
-	cmd := exec.Command("yandex-disk-simulator", "start")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
-	// Output:
-	// Daemon is already running.
-}
-
-func Example40StatusAfterStart() {
-	cmd := exec.Command("yandex-disk-simulator", "status")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
-	// Output:
-	//
 }
 
 func Example45StatusAfter1stEvent() {
-	if getLogEvent(time.Duration(2*time.Second)) != nil {
-		return
-	}
-	cmd := exec.Command("yandex-disk-simulator", "status")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
+	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Synchronization core status: paused
 	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
@@ -142,13 +174,7 @@ func Example45StatusAfter1stEvent() {
 }
 
 func Example50StatusAfter2ndEvent() {
-	if getLogEvent(time.Duration(2*time.Second)) != nil {
-		return
-	}
-	cmd := exec.Command("yandex-disk-simulator", "status")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
+	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Synchronization core status: index
 	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
@@ -156,13 +182,7 @@ func Example50StatusAfter2ndEvent() {
 }
 
 func Example55StatusAfter3rdEvent() {
-	if getLogEvent(time.Duration(2*time.Second)) != nil {
-		return
-	}
-	cmd := exec.Command("yandex-disk-simulator", "status")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
+	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Synchronization core status: busy
 	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
@@ -182,13 +202,7 @@ func Example55StatusAfter3rdEvent() {
 }
 
 func Example60StatusAfter4rdEvent() {
-	if getLogEvent(time.Duration(2*time.Second)) != nil {
-		return
-	}
-	cmd := exec.Command("yandex-disk-simulator", "status")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
+	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Synchronization core status: index
 	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
@@ -208,13 +222,7 @@ func Example60StatusAfter4rdEvent() {
 }
 
 func Example65StatusAfter5rdEvent() {
-	if getLogEvent(time.Duration(6*time.Second)) != nil {
-		return
-	}
-	cmd := exec.Command("yandex-disk-simulator", "status")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
+	getStatusAfterEvent(time.Duration(6 * time.Second))
 	// Output:
 	// Synchronization core status: idle
 	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
@@ -238,19 +246,13 @@ func Example65StatusAfter5rdEvent() {
 }
 
 func Example70Sync() {
-	cmd := exec.Command("yandex-disk-simulator", "sync")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
+	execCommand("sync")
 	// Output:
 	//
 }
 
 func Example75StatusAfterSyncStart() {
-	cmd := exec.Command("yandex-disk-simulator", "status")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
+	execCommand("status")
 	// Output:
 	// Synchronization core status: index
 	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
@@ -274,13 +276,7 @@ func Example75StatusAfterSyncStart() {
 }
 
 func Example80StatusAfter2ndEvent() {
-	if getLogEvent(time.Duration(2*time.Second)) != nil {
-		return
-	}
-	cmd := exec.Command("yandex-disk-simulator", "status")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
+	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Sync progress: 0 MB/ 139.38 MB (0 %)
 	// Synchronization core status: busy
@@ -305,13 +301,7 @@ func Example80StatusAfter2ndEvent() {
 }
 
 func Example85StatusAfter3rdEvent() {
-	if getLogEvent(time.Duration(1*time.Second)) != nil {
-		return
-	}
-	cmd := exec.Command("yandex-disk-simulator", "status")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
+	getStatusAfterEvent(time.Duration(1 * time.Second))
 	// Output:
 	// Sync progress: 65.34 MB/ 139.38 MB (46 %)
 	// Synchronization core status: busy
@@ -336,13 +326,7 @@ func Example85StatusAfter3rdEvent() {
 }
 
 func Example87StatusAfter4rdEvent() {
-	if getLogEvent(time.Duration(3*time.Second)) != nil {
-		return
-	}
-	cmd := exec.Command("yandex-disk-simulator", "status")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
+	getStatusAfterEvent(time.Duration(3 * time.Second))
 	// Output:
 	// Sync progress: 139.38 MB/ 139.38 MB (100 %)
 	// Synchronization core status: index
@@ -367,13 +351,7 @@ func Example87StatusAfter4rdEvent() {
 }
 
 func Example88StatusAfter5rdEvent() {
-	if getLogEvent(time.Duration(1*time.Second)) != nil {
-		return
-	}
-	cmd := exec.Command("yandex-disk-simulator", "status")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
+	getStatusAfterEvent(time.Duration(1 * time.Second))
 	// Output:
 	// Synchronization core status: idle
 	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
@@ -397,19 +375,13 @@ func Example88StatusAfter5rdEvent() {
 }
 
 func Example90Stop() {
-	cmd := exec.Command("yandex-disk-simulator", "stop")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
+	execCommand("stop")
 	// Output:
 	// Daemon stopped.
 }
 
 func Example90SecondaryStop() {
-	cmd := exec.Command("yandex-disk-simulator", "stop")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
+	execCommand("stop")
 	// Output:
 	// Error: daemon not started
 }
