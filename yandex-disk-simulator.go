@@ -12,6 +12,7 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	"bufio"
 )
 
 // Event - the stucture for change event
@@ -189,14 +190,10 @@ func daemonize(exe string) error {
 }
 
 func daemon() error {
-	err := checkCfg()
-	if err != nil {
-		return err
-	}
 	log.Println("Daemon started")
 	defer log.Println("Daemon stopped")
 	// disconnect from terminal
-	_, err = syscall.Setsid()
+	_, err := syscall.Setsid()
 	if err != nil {
 		return fmt.Errorf("syscall.Setsid() error : %v", err)
 	}
@@ -308,29 +305,28 @@ func checkCfg() error {
 	log.Println("Config file: ", confFile)
 	f, err := os.Open(confFile)
 	if err != nil {
-		return fmt.Errorf("%s", "Error: option 'dir' is missing --")
+		return fmt.Errorf("%s", "Error: option 'dir' is missing")
 	}
 	defer f.Close()
-	reader := io.Reader(f)
+	reader := bufio.NewReader(f)
 	var line, dir, auth string
-	var n int
 	for {
-		n, err = fmt.Fscanln(reader, &line)
-		if n == 0 {
+		line, err = reader.ReadString('\n')
+		if err != nil {
 			break
 		}
-		if err != nil {
-			log.Fatal(err)
-		}
 		if strings.HasPrefix(line, "dir") {
-			dir = line[5 : len(line)-1]
+			dir = line[5 : len(line)-2]
 		}
 		if strings.HasPrefix(line, "auth") {
-			auth = line[6 : len(line)-1]
+			auth = line[6 : len(line)-2]
 		}
 		if dir != "" && auth != "" {
 			break
 		}
+	}
+	if err != nil && err != io.EOF {
+		return err
 	}
 	// for empty value DIR return "Error: option 'dir' is missing"
 	if notExists(dir) {
@@ -374,7 +370,7 @@ func setup() error {
 		return err
 	}
 	defer cfile.Close()
-	_, err = cfile.Write([]byte("proxy=\"no\"\nauth=\"" + auth + "\"\ndir=\"" + syncPath + "\"\n\n"))
+	_, err = cfile.Write([]byte("proxy=\"no\"\n\nauth=\"" + auth + "\"\ndir=\"" + syncPath + "\"\n\n"))
 	if err != nil {
 		return fmt.Errorf("Can't create config file: %v", err)
 	}
