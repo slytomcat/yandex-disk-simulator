@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -136,10 +137,10 @@ func TestDoMain17Status(t *testing.T) {
 }
 
 func execCommand(command string) {
-	cmd := exec.Command("yandex-disk-simulator", command)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	cmd.Run()
+	err := doMain([]string{"yandex-disk-simulator", command})
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 }
 
 func getStatusAfterEvent(timeout time.Duration) {
