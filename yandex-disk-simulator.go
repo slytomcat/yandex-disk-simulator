@@ -16,13 +16,6 @@ import (
 	"time"
 )
 
-// Event - the stucture for change event
-type Event struct {
-	msg      string        // status message
-	duration time.Duration // event duration
-	log      string        // cli.log message or no message if it is ""
-}
-
 const (
 	daemonLogFile = "/tmp/yandexdisksymulator.log"
 	socketPath    = "/tmp/yandexdisksymulator.socket"
@@ -46,6 +39,13 @@ Environment variables:
 	Sim_ConfDir	can be used to set configuration directory path (default: ~/.config/yandex-disk)`
 )
 
+// event - the stucture for change event
+type event struct {
+	msg      string        // status message
+	duration time.Duration // event duration
+	log      string        // cli.log message or no message if it is ""
+}
+
 var (
 	cfgPath          = ""
 	syncPath         = ""
@@ -56,42 +56,42 @@ var (
 	startTime = 1000
 
 	// start events sequence
-	startSequence = &[]Event{
-		Event{" ",
+	startSequence = &[]event{
+		event{" ",
 			time.Duration(1600) * time.Millisecond,
 			""},
-		Event{"Synchronization core status: paused\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
+		event{"Synchronization core status: paused\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
 			time.Duration(250) * time.Millisecond,
 			"Start simulation 1"},
-		Event{"Synchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\n",
+		event{"Synchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\n",
 			time.Duration(600) * time.Millisecond,
 			"Start simulation 2"},
-		Event{"Synchronization core status: busy\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
+		event{"Synchronization core status: busy\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
 			time.Duration(100) * time.Millisecond,
 			"Start simulation 3"},
-		Event{"Synchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
+		event{"Synchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
 			time.Duration(4600) * time.Millisecond,
 			"Start simulation 4"},
 	}
 
 	// synchronization events sequence
-	syncSequence = &[]Event{
-		Event{"Synchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
+	syncSequence = &[]event{
+		event{"Synchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
 			time.Duration(900) * time.Millisecond,
 			"Synchronization simulation started"},
-		Event{"Sync progress: 0 MB/ 139.38 MB (0 %)\nSynchronization core status: busy\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
+		event{"Sync progress: 0 MB/ 139.38 MB (0 %)\nSynchronization core status: busy\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
 			time.Duration(100) * time.Millisecond,
 			"Synchronization simulation 1"},
-		Event{"Sync progress: 65.34 MB/ 139.38 MB (46 %)\nSynchronization core status: busy\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
+		event{"Sync progress: 65.34 MB/ 139.38 MB (46 %)\nSynchronization core status: busy\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
 			time.Duration(1500) * time.Millisecond,
 			"Synchronization simulation 2"},
-		Event{"Sync progress: 139.38 MB/ 139.38 MB (100 %)\nSynchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'NewFile'\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\n",
+		event{"Sync progress: 139.38 MB/ 139.38 MB (100 %)\nSynchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'NewFile'\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\n",
 			time.Duration(500) * time.Millisecond,
 			"Synchronization simulation 3"},
 	}
 )
 
-func simulate(name string, seq *[]Event, l io.Writer) {
+func simulate(name string, seq *[]event, l io.Writer) {
 	symLock.Lock()
 	for _, e := range *seq {
 		setMsg(e.msg)
@@ -164,8 +164,7 @@ func doMain(args []string) error {
 }
 
 func daemonize(exe string) error {
-	err := checkCfg()
-	if err != nil {
+	if err := checkCfg(); err != nil {
 		return err
 	}
 	if !notExists(socketPath) {
@@ -176,11 +175,8 @@ func daemonize(exe string) error {
 	// get executable name
 	_, exe = filepath.Split(exe)
 	// execute it with daemon command
-	cmd := exec.Command(exe, "daemon")
-	//cmd.Stdout = os.Stdout
-	//cmd.Stderr = os.Stderr
-	err = cmd.Start()
-	if err != nil {
+	if err := exec.Command(exe, "daemon").Start(); err != nil {
+		fmt.Println("Fail")	
 		return err
 	}
 	time.Sleep(time.Duration(startTime) * time.Millisecond)
@@ -193,12 +189,10 @@ func daemon() error {
     defer log.Println("Daemon stopped")
 	
 	// disconnect from terminal
-	_, err := syscall.Setsid()
-	if err != nil {
+	if _, err := syscall.Setsid(); err != nil {
 		return fmt.Errorf("syscall.Setsid() error : %v", err)
 	}
-	err = checkCfg()
-	if err != nil {
+	if err := checkCfg(); err != nil {
 		return err
 	}
 	// create ~/<SyncDir>/.sync/cli.log if it is not exists
@@ -207,8 +201,7 @@ func daemon() error {
 		syncDir = "$HOME/Yandex.Disk"
 	}
 	logPath := filepath.Join(os.ExpandEnv(syncDir), ".sync")
-	err = os.MkdirAll(logPath, 0755)
-	if err != nil {
+	if err := os.MkdirAll(logPath, 0755); err != nil {
 		return fmt.Errorf(logPath+" creation error:", err)
 	}
 	// open logfile
@@ -273,19 +266,19 @@ func socketIneract(cmd string) error {
 		return fmt.Errorf("Error: daemon not started")
 	}
 	// open socket as client
-	c, err := net.Dial("unix", socketPath)
+	conn, err := net.DialTimeout("unix", socketPath, time.Duration(time.Second))
 	if err != nil {
 		return fmt.Errorf("Socket dial error: %v", err)
 	}
-	defer c.Close()
+	defer conn.Close()
 	// send cmd to socket
-	_, err = c.Write([]byte(cmd))
+	_, err = conn.Write([]byte(cmd))
 	if err != nil {
 		return fmt.Errorf("Socket write error: %v", err)
 	}
 	// read reply
 	buf := make([]byte, 512)
-	n, err := c.Read(buf)
+	n, err := conn.Read(buf)
 	if err != nil {
 		if err == io.EOF { // closed socket mean that daemon was stopped
 			fmt.Println("Daemon stopped.")
@@ -348,17 +341,14 @@ func checkCfg() error {
 }
 
 func setup() error {
-	cfgPath = os.Getenv("Sim_ConfDir")
-	if cfgPath == "" {
+	if cfgPath = os.Getenv("Sim_ConfDir"); cfgPath == "" {
 		cfgPath = os.ExpandEnv("$HOME/Yandex.Disk")
 	}
-	syncPath = os.Getenv("Sim_SyncDir")
-	if syncPath == "" {
+	if syncPath = os.Getenv("Sim_SyncDir"); syncPath == "" {
 		syncPath = os.ExpandEnv("$HOME/.config/yandex-disk")
 	}
-	err := os.MkdirAll(cfgPath, 0777)
-	if err != nil {
-		return fmt.Errorf("Config path creation error")
+	if err := os.MkdirAll(cfgPath, 0777); err != nil {
+		return fmt.Errorf("Config path creation error: %v", err)
 	}
 	auth := filepath.Join(cfgPath, "passwd")
 	if notExists(auth) {
@@ -367,8 +357,8 @@ func setup() error {
 			return fmt.Errorf("yandex-disk token file creation error: %v", err)
 		}
 		defer tfile.Close()
-		_, err = tfile.Write([]byte("token")) // yandex-disk-simulator doesn't require the real token
-		if err != nil {
+		// yandex-disk-simulator doesn't require the real token
+		if _, err = tfile.Write([]byte("token")); err != nil {
 			return fmt.Errorf("yandex-disk token file write error: %v", err)
 		}
 	}
