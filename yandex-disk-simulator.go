@@ -120,15 +120,6 @@ func notExists(path string) bool {
 	return false
 }
 
-func initLog() (*os.File, error) {
-	dlog, err := os.OpenFile(daemonLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0755)
-	if err != nil {
-		return nil, fmt.Errorf("%s opening error: %v", daemonLogFile, err)
-	}
-	log.SetOutput(dlog)
-	return dlog, nil
-}
-
 func main() {
 	err := doMain(os.Args)
 	// The only and one place to print out and handle errors is here
