@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -130,22 +131,25 @@ func initLog() (*os.File, error) {
 
 func main() {
 	err := doMain(os.Args)
+	// The only and one place to print out and handle errors is here
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 }
 
-// doMain is main(). It is for tests
+// doMain is main(). It is mostly for tests
 func doMain(args []string) error {
 	if len(args) == 1 {
 		return fmt.Errorf("%s", "Error: command hasn't been specified. Use the --help command to access help\nor setup to launch the setup wizard.")
 	}
-	daemonlfile, err := initLog()
+	dlog, err := os.OpenFile(daemonLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s opening error: %v", daemonLogFile, err)
 	}
-	defer daemonlfile.Close()
+	defer dlog.Close()
+	log.SetOutput(dlog)
+	log.SetFlags(log.Lshortfile | log.Lmicroseconds)
 	cmd := args[1]
 	if len(cmd) > 8 {
 		cmd = cmd[0:8]
@@ -195,7 +199,8 @@ func daemonize(exe string) error {
 
 func daemon() error {
 	log.Println("Daemon started")
-	defer log.Println("Daemon stopped")
+    defer log.Println("Daemon stopped")
+	
 	// disconnect from terminal
 	_, err := syscall.Setsid()
 	if err != nil {
@@ -248,6 +253,11 @@ func daemon() error {
 		}
 		cmd := string(buf[0:nr])
 		log.Println("Received:", cmd)
+		if notExists(syncDir) && cmd != "stop" {
+			conn.Write([]byte("Error: Indicated directory does not exist"))
+			conn.Close()
+			continue
+		}
 		// react on command ...
 		switch cmd {
 		case "status": // replay to socket by current message
@@ -256,7 +266,7 @@ func daemon() error {
 			msgLock.Unlock()
 		case "sync": // begin the synchronization simulation
 			go simulate("Synchronization", syncSequence, logfile)
-			conn.Write([]byte(" "))
+			conn.Write([]byte{0})
 		case "stop": // stop the daemon
 			conn.Close()
 			return nil
@@ -284,7 +294,7 @@ func socketIneract(cmd string) error {
 	}
 	// read reply
 	buf := make([]byte, 512)
-	n, err := c.Read(buf[:])
+	n, err := c.Read(buf)
 	if err != nil {
 		if err == io.EOF { // closed socket mean that daemon was stopped
 			fmt.Println("Daemon stopped.")
@@ -293,9 +303,12 @@ func socketIneract(cmd string) error {
 		return fmt.Errorf("Socket read error: %v ", err)
 	}
 	// output non-empty reply to stdout
-	m := string(buf[0:n])
-	if m != " " {
-		fmt.Println(m)
+	m := buf[0:n]
+	if n > 1 {
+		if bytes.HasPrefix(m, []byte("Error:")) {
+			return fmt.Errorf("%s", m)
+		}
+		fmt.Printf("%s\n", m)
 	}
 	return nil
 }
