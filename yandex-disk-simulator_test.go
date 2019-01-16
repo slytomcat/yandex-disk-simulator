@@ -44,16 +44,17 @@ func TestDoMain00NoCommand(t *testing.T) {
 	err := doMain([]string{"yandex-disk-simulator"})
 	if err == nil {
 		t.Error("no error for no command")
+		return
 	}
 	if err.Error() != "Error: command hasn't been specified. Use the --help command to access help\nor setup to launch the setup wizard." {
-		t.Error("incorrect message for no command case")
+		t.Error("incorrect message: " + err.Error())
 	}
 }
 
 func TestDoMain01Help(t *testing.T) {
 	res := testCmdWithCapture("help", t)
 	if res != helpMsg+"\n" {
-		t.Error("incorrect message for help case:", res)
+		t.Error("incorrect message:", res)
 	}
 }
 
@@ -61,9 +62,10 @@ func TestDoMain02WrongCommand(t *testing.T) {
 	err := doMain([]string{"yandex-disk-simulator", "wrongCMD_cut_it"})
 	if err == nil {
 		t.Error("no error for wrong command")
+		return
 	}
 	if err.Error() != "Error: unknown command: 'wrongCMD'" {
-		t.Error("incorrect message for wrong command case")
+		t.Error("incorrect message: " + err.Error())
 	}
 }
 
@@ -71,9 +73,10 @@ func TestDoMain04StartNoConfig(t *testing.T) {
 	err := doMain([]string{"yandex-disk-simulator", "start"})
 	if err == nil {
 		t.Error("no error for start without config")
+		return
 	}
 	if err.Error() != "Error: option 'dir' is missing" {
-		t.Error("incorrect message for start without config case")
+		t.Error("incorrect message: " + err.Error())
 	}
 }
 
@@ -88,9 +91,10 @@ func TestDoMain07Command2NotStarted(t *testing.T) {
 	err := doMain([]string{"yandex-disk-simulator", "status"})
 	if err == nil {
 		t.Error("no error for command to not started")
+		return
 	}
 	if err.Error() != "Error: daemon not started" {
-		t.Error("incorrect message for command to not started case: " + err.Error())
+		t.Error("incorrect message: " + err.Error())
 	}
 }
 
@@ -110,14 +114,14 @@ func testCmdWithCapture(cmd string, t *testing.T) string {
 func TestDoMain10StartSuccess(t *testing.T) {
 	res := testCmdWithCapture("start", t)
 	if res != "Starting daemon process...Done\n" {
-		t.Error("incorrect message for start without config case:", res)
+		t.Error("incorrect message: " + res)
 	}
 }
 
 func TestDoMain11StartSecondary(t *testing.T) {
 	res := testCmdWithCapture("start", t)
 	if res != "Daemon is already running.\n" {
-		t.Error("incorrect message for secondary start case:", res)
+		t.Error("incorrect message: " + res)
 	}
 }
 
@@ -132,7 +136,7 @@ func TestDoMain15StartDaemon(t *testing.T) {
 func TestDoMain17Status(t *testing.T) {
 	res := testCmdWithCapture("status", t)
 	if res != "" {
-		t.Error("incorrect message for status case:", res)
+		t.Error("incorrect message: " + res)
 	}
 }
 
@@ -257,6 +261,7 @@ func Example65StatusAfter5rdEvent() {
 }
 
 func Example70Sync() {
+	// call it
 	execCommand("sync")
 	// Output:
 	//
@@ -413,13 +418,20 @@ func Example89StatusInEnv() {
 	// 	file: 'n'
 }
 
-func Example90Stop() {
+func Example90CommandWithoutDir() {
+	os.RemoveAll(SyncDirPath)
+	execCommand("status")
+	// Output:
+	// Error: Indicated directory does not exist
+}
+
+func Example95Stop() {
 	execCommand("stop")
 	// Output:
 	// Daemon stopped.
 }
 
-func Example90SecondaryStop() {
+func Example97SecondaryStop() {
 	execCommand("stop")
 	// Output:
 	// Error: daemon not started
