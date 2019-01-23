@@ -37,6 +37,9 @@ Simulator commands:
 Environment variables:
 	Sim_SyncDir	can be used to set synchronized directory path (default: ~/Yandex.Disk)
 	Sim_ConfDir	can be used to set configuration directory path (default: ~/.config/yandex-disk)`
+
+	msgIdle   = "Synchronization core status: idle\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n"
+	startTime = 1000
 )
 
 // event - the stucture for change event
@@ -47,13 +50,8 @@ type event struct {
 }
 
 var (
-	cfgPath          = ""
-	syncPath         = ""
 	message          = " "
 	msgLock, symLock sync.Mutex
-
-	msgIdle   = "Synchronization core status: idle\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n"
-	startTime = 1000
 
 	// start events sequence
 	startSequence = &[]event{
@@ -121,15 +119,13 @@ func notExists(path string) bool {
 }
 
 func main() {
-	err := doMain(os.Args)
-	// The only and one place to print out and handle errors is here
-	if err != nil {
+	if err := doMain(os.Args); err != nil {
+		// The only and one place to print out and handle errors is here
 		fmt.Println(err)
 		os.Exit(1)
 	}
 }
 
-// doMain is main(). It is mostly for tests
 func doMain(args []string) error {
 	if len(args) == 1 {
 		return fmt.Errorf("%s", "Error: command hasn't been specified. Use the --help command to access help\nor setup to launch the setup wizard.")
@@ -147,7 +143,7 @@ func doMain(args []string) error {
 	}
 	switch cmd {
 	case "daemon":
-		return daemon()
+		return daemon(args[2])
 	case "start":
 		return daemonize(args[0])
 	case "status", "stop", "sync":
@@ -164,7 +160,8 @@ func doMain(args []string) error {
 }
 
 func daemonize(exe string) error {
-	if err := checkCfg(); err != nil {
+	dir, err := checkCfg()
+	if err != nil {
 		return err
 	}
 	if !notExists(socketPath) {
@@ -172,11 +169,11 @@ func daemonize(exe string) error {
 		return nil
 	}
 	fmt.Print("Starting daemon process...")
-	// get executable name
+	// get executable name from os.Args[0] passed as exe
 	_, exe = filepath.Split(exe)
 	// execute it with daemon command
-	if err := exec.Command(exe, "daemon").Start(); err != nil {
-		fmt.Println("Fail")	
+	if err := exec.Command(exe, "daemon", dir).Start(); err != nil {
+		fmt.Println("Fail")
 		return err
 	}
 	time.Sleep(time.Duration(startTime) * time.Millisecond)
@@ -184,21 +181,12 @@ func daemonize(exe string) error {
 	return nil
 }
 
-func daemon() error {
+func daemon(syncDir string) error {
 	log.Println("Daemon started")
-    defer log.Println("Daemon stopped")
-	
+	defer log.Println("Daemon stopped")
 	// disconnect from terminal
 	if _, err := syscall.Setsid(); err != nil {
 		return fmt.Errorf("syscall.Setsid() error : %v", err)
-	}
-	if err := checkCfg(); err != nil {
-		return err
-	}
-	// create ~/<SyncDir>/.sync/cli.log if it is not exists
-	syncDir := os.Getenv("Sim_SyncDir")
-	if syncDir == "" {
-		syncDir = "$HOME/Yandex.Disk"
 	}
 	logPath := filepath.Join(os.ExpandEnv(syncDir), ".sync")
 	if err := os.MkdirAll(logPath, 0755); err != nil {
@@ -242,7 +230,7 @@ func daemon() error {
 			conn.Close()
 			continue
 		}
-		// react on command ...
+		// handle command
 		switch cmd {
 		case "status": // replay to socket by current message
 			msgLock.Lock()
@@ -254,8 +242,7 @@ func daemon() error {
 		case "stop": // stop the daemon
 			conn.Close()
 			return nil
-			//default: there is no other options (should be) possible
-		}
+		} //default: there is no other options (should be) possible
 		conn.Close()
 	}
 }
@@ -297,7 +284,7 @@ func socketIneract(cmd string) error {
 	return nil
 }
 
-func checkCfg() error {
+func checkCfg() (string, error) {
 	confDir := os.Getenv("Sim_ConfDir")
 	if confDir == "" {
 		confDir = "$HOME/.config/yandex-disk"
@@ -306,7 +293,7 @@ func checkCfg() error {
 	log.Println("Config file: ", confFile)
 	f, err := os.Open(confFile)
 	if err != nil {
-		return fmt.Errorf("%s", "Error: option 'dir' is missing")
+		return "", fmt.Errorf("%s", "Error: option 'dir' is missing")
 	}
 	defer f.Close()
 	reader := bufio.NewReader(f)
@@ -327,24 +314,26 @@ func checkCfg() error {
 		}
 	}
 	if err != nil && err != io.EOF {
-		return err
+		return "", err
 	}
 	// for empty value DIR return "Error: option 'dir' is missing"
 	if notExists(dir) {
-		return fmt.Errorf("%s", "Error: option 'dir' is missing")
+		return "", fmt.Errorf("%s", "Error: option 'dir' is missing")
 	}
 	// for empty value AUTH return "Error: file with OAuth token hasn't been found.\nUse 'token' command to authenticate and create this file"
 	if notExists(auth) {
-		return fmt.Errorf("%s", "Error: file with OAuth token hasn't been found.\nUse 'token' command to authenticate and create this file")
+		return "", fmt.Errorf("%s", "Error: file with OAuth token hasn't been found.\nUse 'token' command to authenticate and create this file")
 	}
-	return nil
+	return dir, nil
 }
 
 func setup() error {
-	if cfgPath = os.Getenv("Sim_ConfDir"); cfgPath == "" {
+	cfgPath := os.Getenv("Sim_ConfDir")
+	if cfgPath == "" {
 		cfgPath = os.ExpandEnv("$HOME/Yandex.Disk")
 	}
-	if syncPath = os.Getenv("Sim_SyncDir"); syncPath == "" {
+	syncPath := os.Getenv("Sim_SyncDir")
+	if syncPath == "" {
 		syncPath = os.ExpandEnv("$HOME/.config/yandex-disk")
 	}
 	if err := os.MkdirAll(cfgPath, 0777); err != nil {
