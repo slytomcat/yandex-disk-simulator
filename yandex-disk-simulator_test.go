@@ -52,9 +52,18 @@ func TestDoMain00NoCommand(t *testing.T) {
 }
 
 func TestDoMain01Help(t *testing.T) {
-	res := testCmdWithCapture("help", t)
-	if res != helpMsg+"\n" {
-		t.Error("incorrect message:", res)
+	stdOut := os.Stdout
+	args := os.Args
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	os.Args = []string{"yandex-disk-simulator", "help"}
+	main()
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = stdOut
+	os.Args = args
+	if string(out) != helpMsg+"\n" {
+		t.Error("incorrect message:", out)
 	}
 }
 
@@ -129,7 +138,7 @@ func TestDoMain15StartDaemon(t *testing.T) {
 	// stop already executed daemon
 	exec.Command("yandex-disk-simulator", "stop").Run()
 	// start daemon in separate gorutine
-	go doMain([]string{"yandex-disk-simulator", "daemon"})
+	go doMain([]string{"yandex-disk-simulator", "daemon", SyncDirPath})
 	time.Sleep(10 * time.Millisecond)
 }
 
