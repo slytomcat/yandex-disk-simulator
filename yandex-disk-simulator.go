@@ -32,8 +32,9 @@ Commands:
 		Environment variables Sim_ConfDir and Sim_SyncDir should be set in advance, 
 		otherways the default paths will be used.
 		Setup process doesn't requere any input in the terminal.
-Simulator commands:
-	daemon	start as a daemon (Don't use it !!!)
+Simulator internal commands (don't use them!!!):
+	daemon <SyncPath>
+		Start as a daemon, it is internal 'start' command implementation.
 Environment variables:
 	Sim_SyncDir	can be used to set synchronized directory path (default: ~/Yandex.Disk)
 	Sim_ConfDir	can be used to set configuration directory path (default: ~/.config/yandex-disk)`
@@ -238,8 +239,10 @@ func daemon(syncDir string) error {
 			msgLock.Unlock()
 		case "sync": // begin the synchronization simulation
 			go simulate("Synchronization", syncSequence, logfile)
+			// we have to send back something to show that daemon still active
 			conn.Write([]byte{0})
 		case "stop": // stop the daemon
+			// send back nothing to show that daemon is not active any more
 			conn.Close()
 			return nil
 		} //default: there is no other options (should be) possible
