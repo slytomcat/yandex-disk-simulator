@@ -20,6 +20,10 @@ jobs:
           path: coverage.html
       - store_test_results:
           path: results
+      - run:
+          name: upload_release
+          command: eval $ABR
+
 
 workflows:
   version: 2
