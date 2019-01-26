@@ -225,7 +225,7 @@ func Example55StatusAfter3rdEvent() {
 	// 	file: 'n'
 }
 
-func Example60StatusAfter4rdEvent() {
+func Example60StatusAfter4thEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Synchronization core status: index
@@ -245,7 +245,7 @@ func Example60StatusAfter4rdEvent() {
 	// 	file: 'n'
 }
 
-func Example65StatusAfter5rdEvent() {
+func Example65StatusAfter5thEvent() {
 	getStatusAfterEvent(time.Duration(6 * time.Second))
 	// Output:
 	// Synchronization core status: idle
@@ -350,7 +350,7 @@ func Example85StatusAfter3rdEvent() {
 	// 	file: 'n'
 }
 
-func Example87StatusAfter4rdEvent() {
+func Example87StatusAfter4thEvent() {
 	getStatusAfterEvent(time.Duration(3 * time.Second))
 	// Output:
 	// Sync progress: 139.38 MB/ 139.38 MB (100 %)
@@ -375,7 +375,7 @@ func Example87StatusAfter4rdEvent() {
 	// 	file: 'w'
 }
 
-func Example88StatusAfter5rdEvent() {
+func Example88StatusAfter5thEvent() {
 	getStatusAfterEvent(time.Duration(1 * time.Second))
 	// Output:
 	// Synchronization core status: idle
