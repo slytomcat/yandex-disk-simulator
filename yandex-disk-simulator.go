@@ -49,7 +49,7 @@ Environment variables:
 type event struct {
 	msg      string        // status message
 	duration time.Duration // event duration
-	log      string        // cli.log message or no message if it is ""
+	logm     string        // cli.log message or no message if it is ""
 }
 
 var (
@@ -93,9 +93,6 @@ var (
 
 	// error events sequence
 	errorSequence = &[]event{
-		event{"Synchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
-			time.Duration(200) * time.Millisecond,
-			"Error simulation started"},
 		event{"Synchronization core status: error\nError: access error\nPath: 'downloads/test1'\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.88 GB\n\tAvailable: 40.62 GB\n\tMax file size: 50 GB\n\tTrash size: 654.48 MB\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
 			time.Duration(500) * time.Millisecond,
 			"Error simulation 1"},
@@ -104,16 +101,18 @@ var (
 
 func simulate(name string, seq *[]event, l io.Writer) {
 	symLock.Lock()
-	defer symLock.Unlock()
 	for _, e := range *seq {
 		setMsg(e.msg)
-		if e.log != "" {
-			l.Write([]byte(e.log + "\n"))
+		if e.logm != "" {
+			l.Write([]byte(e.logm + "\n"))
+			log.Println(e.logm)
 		}
 		time.Sleep(e.duration)
 	}
 	setMsg(msgIdle)
 	l.Write([]byte(name + " simulation finished\n"))
+	log.Println(name + " simulation finished")
+	symLock.Unlock()
 }
 
 func setMsg(m string) {
