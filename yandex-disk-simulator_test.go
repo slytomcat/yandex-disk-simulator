@@ -177,7 +177,7 @@ func getStatusAfterEvent(timeout time.Duration) {
 	}
 }
 
-func Example45StatusAfter1stEvent() {
+func Example20StatusAfter1stEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Synchronization core status: paused
@@ -197,7 +197,7 @@ func Example45StatusAfter1stEvent() {
 	// 	file: 'n'
 }
 
-func Example50StatusAfter2ndEvent() {
+func Example22StatusAfter2ndEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Synchronization core status: index
@@ -205,7 +205,7 @@ func Example50StatusAfter2ndEvent() {
 	// 	The quota has not been received yet.
 }
 
-func Example55StatusAfter3rdEvent() {
+func Example24StatusAfter3rdEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Synchronization core status: busy
@@ -225,7 +225,7 @@ func Example55StatusAfter3rdEvent() {
 	// 	file: 'n'
 }
 
-func Example60StatusAfter4thEvent() {
+func Example26StatusAfter4thEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Synchronization core status: index
@@ -245,7 +245,7 @@ func Example60StatusAfter4thEvent() {
 	// 	file: 'n'
 }
 
-func Example65StatusAfter5thEvent() {
+func Example28StatusAfter5thEvent() {
 	getStatusAfterEvent(time.Duration(6 * time.Second))
 	// Output:
 	// Synchronization core status: idle
@@ -269,14 +269,14 @@ func Example65StatusAfter5thEvent() {
 	// 	file: 'n'
 }
 
-func Example70Sync() {
+func Example40Sync() {
 	// call it
 	execCommand("sync")
 	// Output:
 	//
 }
 
-func Example75StatusAfterSyncStart() {
+func Example42StatusAfterSyncStart() {
 	execCommand("status")
 	// Output:
 	// Synchronization core status: index
@@ -300,7 +300,7 @@ func Example75StatusAfterSyncStart() {
 	// 	file: 'n'
 }
 
-func Example80StatusAfter2ndEvent() {
+func Example44StatusAfter2ndEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Sync progress: 0 MB/ 139.38 MB (0 %)
@@ -325,7 +325,7 @@ func Example80StatusAfter2ndEvent() {
 	// 	file: 'n'
 }
 
-func Example85StatusAfter3rdEvent() {
+func Example46StatusAfter3rdEvent() {
 	getStatusAfterEvent(time.Duration(1 * time.Second))
 	// Output:
 	// Sync progress: 65.34 MB/ 139.38 MB (46 %)
@@ -350,7 +350,7 @@ func Example85StatusAfter3rdEvent() {
 	// 	file: 'n'
 }
 
-func Example87StatusAfter4thEvent() {
+func Example48StatusAfter4thEvent() {
 	getStatusAfterEvent(time.Duration(3 * time.Second))
 	// Output:
 	// Sync progress: 139.38 MB/ 139.38 MB (100 %)
@@ -375,7 +375,7 @@ func Example87StatusAfter4thEvent() {
 	// 	file: 'w'
 }
 
-func Example88StatusAfter5thEvent() {
+func Example50StatusAfter5thEvent() {
 	getStatusAfterEvent(time.Duration(1 * time.Second))
 	// Output:
 	// Synchronization core status: idle
@@ -399,7 +399,63 @@ func Example88StatusAfter5thEvent() {
 	// 	file: 'n'
 }
 
-func Example89StatusInEnv() {
+func Example60Error() {
+	execCommand("error")
+	// Output:
+	//
+}
+
+func Example62StatusAfter1stEvent() {
+	getStatusAfterEvent(time.Duration(1 * time.Second))
+	// Output:
+	// Synchronization core status: error
+	// Error: access error
+	// Path: 'downloads/test1'
+	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
+	// 	Total: 43.50 GB
+	// 	Used: 2.88 GB
+	// 	Available: 40.62 GB
+	// 	Max file size: 50 GB
+	// 	Trash size: 654.48 MB
+	//
+	// Last synchronized items:
+	// 	file: 'File.ods'
+	// 	file: 'downloads/file.deb'
+	// 	file: 'downloads/setup'
+	// 	file: 'download'
+	// 	file: 'down'
+	// 	file: 'do'
+	// 	file: 'd'
+	// 	file: 'o'
+	// 	file: 'w'
+	// 	file: 'n'
+}
+
+func Example64StatusAfter2ndEvent() {
+	getStatusAfterEvent(time.Duration(1 * time.Second))
+	// Output:
+	// Synchronization core status: idle
+	// Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
+	// 	Total: 43.50 GB
+	// 	Used: 2.89 GB
+	// 	Available: 40.61 GB
+	// 	Max file size: 50 GB
+	// 	Trash size: 0 B
+	//
+	// Last synchronized items:
+	// 	file: 'File.ods'
+	// 	file: 'downloads/file.deb'
+	// 	file: 'downloads/setup'
+	// 	file: 'download'
+	// 	file: 'down'
+	// 	file: 'do'
+	// 	file: 'd'
+	// 	file: 'o'
+	// 	file: 'w'
+	// 	file: 'n'
+}
+
+func Example80StatusInEnv() {
 	exe, _ := exec.LookPath("yandex-disk-simulator")
 	cmd := exec.Command("env", "-i", exe, "status")
 	cmd.Stdout = os.Stdout
