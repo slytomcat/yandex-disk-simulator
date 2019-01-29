@@ -33,6 +33,7 @@ Commands:
 		otherways the default paths will be used.
 		Setup process doesn't requere any input in the terminal.
 Simulator internal commands (don't use them!!!):
+	error	begin the error simulation (idle->error->idle)
 	daemon <SyncPath>
 		Start as a daemon, it is internal 'start' command implementation.
 Environment variables:
@@ -41,6 +42,7 @@ Environment variables:
 
 	msgIdle   = "Synchronization core status: idle\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n"
 	startTime = 1000
+	msgError  = "Synchronization core status: error\nError: access error\nPath: 'downloads/test1'\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.88 GB\n\tAvailable: 40.62 GB\n\tMax file size: 50 GB\n\tTrash size: 654.48 MB\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n"
 )
 
 // event - the stucture for change event
@@ -88,10 +90,21 @@ var (
 			time.Duration(500) * time.Millisecond,
 			"Synchronization simulation 3"},
 	}
+
+	// error events sequence
+	errorSequence = &[]event{
+		event{"Synchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
+			time.Duration(200) * time.Millisecond,
+			"Error simulation started"},
+		event{"Synchronization core status: error\nError: access error\nPath: 'downloads/test1'\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.88 GB\n\tAvailable: 40.62 GB\n\tMax file size: 50 GB\n\tTrash size: 654.48 MB\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
+			time.Duration(500) * time.Millisecond,
+			"Error simulation 1"},
+	}
 )
 
 func simulate(name string, seq *[]event, l io.Writer) {
 	symLock.Lock()
+	defer symLock.Unlock()
 	for _, e := range *seq {
 		setMsg(e.msg)
 		if e.log != "" {
@@ -101,7 +114,6 @@ func simulate(name string, seq *[]event, l io.Writer) {
 	}
 	setMsg(msgIdle)
 	l.Write([]byte(name + " simulation finished\n"))
-	symLock.Unlock()
 }
 
 func setMsg(m string) {
@@ -147,7 +159,7 @@ func doMain(args []string) error {
 		return daemon(args[2])
 	case "start":
 		return daemonize(args[0])
-	case "status", "stop", "sync":
+	case "status", "stop", "sync", "error":
 		// only listed commands will be passed to daemon
 		return socketIneract(cmd)
 	case "setup":
@@ -240,6 +252,9 @@ func daemon(syncDir string) error {
 		case "sync": // begin the synchronization simulation
 			go simulate("Synchronization", syncSequence, logfile)
 			// we have to send back something to show that daemon still active
+			conn.Write([]byte{0})
+		case "error": // switch to error state
+			go simulate("Error", errorSequence, logfile)
 			conn.Write([]byte{0})
 		case "stop": // stop the daemon
 			// send back nothing to show that daemon is not active any more
