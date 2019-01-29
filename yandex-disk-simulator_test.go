@@ -405,8 +405,8 @@ func Example60Error() {
 	//
 }
 
-func Example62StatusAfter1stEvent() {
-	getStatusAfterEvent(time.Duration(1 * time.Second))
+func Example62StatusAfterError() {
+	execCommand("status")
 	// Output:
 	// Synchronization core status: error
 	// Error: access error
@@ -431,7 +431,7 @@ func Example62StatusAfter1stEvent() {
 	// 	file: 'n'
 }
 
-func Example64StatusAfter2ndEvent() {
+func Example64StatusAfter1stEvent() {
 	getStatusAfterEvent(time.Duration(1 * time.Second))
 	// Output:
 	// Synchronization core status: idle
