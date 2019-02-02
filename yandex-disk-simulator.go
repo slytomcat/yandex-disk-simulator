@@ -32,17 +32,16 @@ Commands:
 		Environment variables Sim_ConfDir and Sim_SyncDir should be set in advance, 
 		otherways the default paths will be used.
 		Setup process doesn't requere any input in the terminal.
-Simulator internal commands (don't use them!!!):
-	error	begin the error simulation (idle->error->idle)
+Simulator internal commands:
+	error	begin the error simulation (idle->error (for .5 sec)->idle)
 	daemon <SyncPath>
-		Start as a daemon, it is internal 'start' command implementation.
+		Start as a daemon, it is internal 'start' command implementation. DON'N USE IT!
 Environment variables:
 	Sim_SyncDir	can be used to set synchronized directory path (default: ~/Yandex.Disk)
 	Sim_ConfDir	can be used to set configuration directory path (default: ~/.config/yandex-disk)`
 
 	msgIdle   = "Synchronization core status: idle\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n"
-	startTime = 1000
-	msgError  = "Synchronization core status: error\nError: access error\nPath: 'downloads/test1'\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.88 GB\n\tAvailable: 40.62 GB\n\tMax file size: 50 GB\n\tTrash size: 654.48 MB\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n"
+	startTime = 500
 )
 
 // event - the stucture for change event
@@ -59,7 +58,7 @@ var (
 	// start events sequence
 	startSequence = &[]event{
 		event{" ",
-			time.Duration(1600) * time.Millisecond,
+			time.Duration(1200) * time.Millisecond,
 			""},
 		event{"Synchronization core status: paused\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
 			time.Duration(250) * time.Millisecond,
@@ -71,7 +70,7 @@ var (
 			time.Duration(100) * time.Millisecond,
 			"Start simulation 3"},
 		event{"Synchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
-			time.Duration(4600) * time.Millisecond,
+			time.Duration(2200) * time.Millisecond,
 			"Start simulation 4"},
 	}
 
