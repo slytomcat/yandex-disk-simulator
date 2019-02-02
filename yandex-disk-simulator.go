@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	daemonLogFile = "/tmp/yandexdisksymulator.log"
-	socketPath    = "/tmp/yandexdisksymulator.socket"
+	daemonLogFile = "/tmp/yandexdisksimulator.log"
+	socketPath    = "/tmp/yandexdisksimulator.socket"
 	helpMsg       = `Usage:
 	yandex-disk-similator <cmd>
 Commands:
