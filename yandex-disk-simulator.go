@@ -122,8 +122,7 @@ func setMsg(m string) {
 }
 
 func notExists(path string) bool {
-	_, err := os.Stat(path)
-	if err != nil {
+	if _, err := os.Stat(path); err != nil {
 		return os.IsNotExist(err)
 	}
 	return false
@@ -377,8 +376,7 @@ func setup() error {
 	if err != nil {
 		return fmt.Errorf("Can't create config file: %v", err)
 	}
-	err = os.MkdirAll(syncPath, 0777)
-	if err != nil {
+	if err = os.MkdirAll(syncPath, 0777); err != nil {
 		return fmt.Errorf("synchronization Dir creation error: %v", err)
 	}
 	return nil
