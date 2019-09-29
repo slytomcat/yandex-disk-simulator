@@ -51,56 +51,78 @@ type event struct {
 	logm     string        // cli.log message or no message if it is ""
 }
 
+type eventSet struct {
+	name   string  // Name of the set
+	events []event // events of the set
+}
+
 var (
 	message          = " "
 	msgLock, symLock sync.Mutex
 
 	// start events sequence
-	startSequence = &[]event{
-		event{" ",
-			time.Duration(1200) * time.Millisecond,
-			""},
-		event{"Synchronization core status: paused\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
-			time.Duration(250) * time.Millisecond,
-			"Start simulation 1"},
-		event{"Synchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\n",
-			time.Duration(600) * time.Millisecond,
-			"Start simulation 2"},
-		event{"Synchronization core status: busy\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
-			time.Duration(100) * time.Millisecond,
-			"Start simulation 3"},
-		event{"Synchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
-			time.Duration(2200) * time.Millisecond,
-			"Start simulation 4"},
+	startSequence = eventSet{
+		name: "Start",
+		events: []event{
+			event{" ",
+				time.Duration(1200) * time.Millisecond,
+				""},
+			event{"Synchronization core status: paused\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
+				time.Duration(250) * time.Millisecond,
+				"Start simulation 1"},
+			event{"Synchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\n",
+				time.Duration(600) * time.Millisecond,
+				"Start simulation 2"},
+			event{"Synchronization core status: busy\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
+				time.Duration(100) * time.Millisecond,
+				"Start simulation 3"},
+			event{"Synchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
+				time.Duration(2200) * time.Millisecond,
+				"Start simulation 4"},
+		},
 	}
 
 	// synchronization events sequence
-	syncSequence = &[]event{
-		event{"Synchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
-			time.Duration(900) * time.Millisecond,
-			"Synchronization simulation started"},
-		event{"Sync progress: 0 MB/ 139.38 MB (0 %)\nSynchronization core status: busy\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
-			time.Duration(100) * time.Millisecond,
-			"Synchronization simulation 1"},
-		event{"Sync progress: 65.34 MB/ 139.38 MB (46 %)\nSynchronization core status: busy\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
-			time.Duration(1500) * time.Millisecond,
-			"Synchronization simulation 2"},
-		event{"Sync progress: 139.38 MB/ 139.38 MB (100 %)\nSynchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'NewFile'\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\n",
-			time.Duration(500) * time.Millisecond,
-			"Synchronization simulation 3"},
+	syncSequence = eventSet{
+		name: "Synchronization",
+		events: []event{
+			event{"Synchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
+				time.Duration(900) * time.Millisecond,
+				"Synchronization simulation started"},
+			event{"Sync progress: 0 MB/ 139.38 MB (0 %)\nSynchronization core status: busy\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
+				time.Duration(100) * time.Millisecond,
+				"Synchronization simulation 1"},
+			event{"Sync progress: 65.34 MB/ 139.38 MB (46 %)\nSynchronization core status: busy\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
+				time.Duration(1500) * time.Millisecond,
+				"Synchronization simulation 2"},
+			event{"Sync progress: 139.38 MB/ 139.38 MB (100 %)\nSynchronization core status: index\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'NewFile'\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\n",
+				time.Duration(500) * time.Millisecond,
+				"Synchronization simulation 3"},
+		},
 	}
 
 	// error events sequence
-	errorSequence = &[]event{
-		event{"Synchronization core status: error\nError: access error\nPath: 'downloads/test1'\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.88 GB\n\tAvailable: 40.62 GB\n\tMax file size: 50 GB\n\tTrash size: 654.48 MB\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
-			time.Duration(500) * time.Millisecond,
-			"Error simulation 1"},
+	errorSequence = eventSet{
+		name: "Error",
+		events: []event{
+			event{"Synchronization core status: error\nError: access error\nPath: 'downloads/test1'\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.88 GB\n\tAvailable: 40.62 GB\n\tMax file size: 50 GB\n\tTrash size: 654.48 MB\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
+				time.Duration(500) * time.Millisecond,
+				"Error simulation 1"},
+		},
 	}
 )
 
-func simulate(name string, seq *[]event, l io.Writer) {
+func simulate(seq eventSet, l io.Writer) {
+
+	setMsg := func(m string) {
+		// thread safe message update
+		msgLock.Lock()
+		message = m
+		msgLock.Unlock()
+	}
+
 	symLock.Lock()
-	for _, e := range *seq {
+	for _, e := range seq.events {
 		setMsg(e.msg)
 		if e.logm != "" {
 			l.Write([]byte(e.logm + "\n"))
@@ -109,16 +131,9 @@ func simulate(name string, seq *[]event, l io.Writer) {
 		time.Sleep(e.duration)
 	}
 	setMsg(msgIdle)
-	l.Write([]byte(name + " simulation finished\n"))
-	log.Println(name + " simulation finished")
+	l.Write([]byte(seq.name + " simulation finished\n"))
+	log.Println(seq.name + " simulation finished")
 	symLock.Unlock()
-}
-
-func setMsg(m string) {
-	// thread safe message update
-	msgLock.Lock()
-	message = m
-	msgLock.Unlock()
 }
 
 func notExists(path string) bool {
@@ -220,7 +235,7 @@ func daemon(syncDir string) error {
 	defer ln.Close()
 
 	// begin start simulation
-	go simulate("Start", startSequence, logfile)
+	go simulate(startSequence, logfile)
 
 	buf := make([]byte, 8)
 	for {
@@ -247,11 +262,11 @@ func daemon(syncDir string) error {
 			conn.Write([]byte(message))
 			msgLock.Unlock()
 		case "sync": // begin the synchronization simulation
-			go simulate("Synchronization", syncSequence, logfile)
+			go simulate(syncSequence, logfile)
 			// we have to send back something to show that daemon still active
 			conn.Write([]byte{0})
 		case "error": // switch to error state
-			go simulate("Error", errorSequence, logfile)
+			go simulate(errorSequence, logfile)
 			conn.Write([]byte{0})
 		case "stop": // stop the daemon
 			// send back nothing to show that daemon is not active any more
