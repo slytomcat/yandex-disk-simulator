@@ -170,6 +170,7 @@ func doMain(args []string) error {
 }
 
 func daemonize(exe string) error {
+	// check configuration and get sync dir
 	dir, err := checkCfg()
 	if err != nil {
 		return err
@@ -180,8 +181,7 @@ func daemonize(exe string) error {
 	}
 	fmt.Print("Starting daemon process...")
 	// get executable name from os.Args[0] passed as exe
-	_, exe = filepath.Split(exe)
-	// execute it with daemon command
+	// execute it with daemon command and sync dir as second parameter
 	if err := exec.Command(exe, "daemon", dir).Start(); err != nil {
 		fmt.Println("Fail")
 		return err
@@ -242,7 +242,7 @@ func daemon(syncDir string) error {
 		}
 		// handle command
 		switch cmd {
-		case "status": // replay to socket by current message
+		case "status": // reply into socket by current message
 			msgLock.Lock()
 			conn.Write([]byte(message))
 			msgLock.Unlock()
@@ -264,7 +264,6 @@ func daemon(syncDir string) error {
 
 func socketIneract(cmd string) error {
 	if notExists(socketPath) {
-		// output error to stdout and exit with nonzero error code
 		return fmt.Errorf("Error: daemon not started")
 	}
 	// open socket as client
@@ -278,7 +277,7 @@ func socketIneract(cmd string) error {
 	if err != nil {
 		return fmt.Errorf("Socket write error: %v", err)
 	}
-	// read reply
+	// read response
 	buf := make([]byte, 512)
 	n, err := conn.Read(buf)
 	if err != nil {
@@ -288,12 +287,13 @@ func socketIneract(cmd string) error {
 		}
 		return fmt.Errorf("Socket read error: %v ", err)
 	}
-	// output non-empty reply to stdout
 	m := buf[0:n]
 	if n > 1 {
+		// Handle errors from daemon
 		if bytes.HasPrefix(m, []byte("Error:")) {
 			return fmt.Errorf("%s", m)
 		}
+		// output non-error messages from daemon
 		fmt.Printf("%s\n", m)
 	}
 	return nil
@@ -331,11 +331,11 @@ func checkCfg() (string, error) {
 	if err != nil && err != io.EOF {
 		return "", err
 	}
-	// for empty value DIR return "Error: option 'dir' is missing"
+	// return error if value of DIR is empty"
 	if notExists(dir) {
 		return "", fmt.Errorf("%s", "Error: option 'dir' is missing")
 	}
-	// for empty value AUTH return "Error: file with OAuth token hasn't been found.\nUse 'token' command to authenticate and create this file"
+	// return error if value of AUTH is empty
 	if notExists(auth) {
 		return "", fmt.Errorf("%s", "Error: file with OAuth token hasn't been found.\nUse 'token' command to authenticate and create this file")
 	}
@@ -374,7 +374,7 @@ func setup() error {
 	defer cfile.Close()
 	_, err = cfile.Write([]byte("proxy=\"no\"\n\nauth=\"" + auth + "\"\ndir=\"" + syncPath + "\"\n\n"))
 	if err != nil {
-		return fmt.Errorf("Can't create config file: %v", err)
+		return fmt.Errorf("Can't write to config file: %v", err)
 	}
 	if err = os.MkdirAll(syncPath, 0777); err != nil {
 		return fmt.Errorf("synchronization Dir creation error: %v", err)
