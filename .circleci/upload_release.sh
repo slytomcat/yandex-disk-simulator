@@ -19,12 +19,19 @@ chmod a+x upload-github-release-asset.sh
 export OWNER=$CIRCLE_PROJECT_USERNAME
 export REPO=$CIRCLE_PROJECT_REPONAME
 
+echo Building for amd64 architrecture 
 go build .
 mv yandex-disk-simulator yandex-disk-simulator-linux-amd64
+
+echo Uploading amd64
 ./upload-github-release-asset.sh github_api_token=$GHAPITOKEN owner=$OWNER repo=$REPO tag="$TAG" filename=yandex-disk-simulator-linux-amd64
+
+echo Building for 386 architrecture 
 export GOARCH=386
 go build .
 mv yandex-disk-simulator yandex-disk-simulator-linux-386
+
+echo Uploading amd64
 ./upload-github-release-asset.sh github_api_token=$GHAPITOKEN owner=$OWNER repo=$REPO tag="$TAG" filename=yandex-disk-simulator-linux-386
 
 
