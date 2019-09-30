@@ -1,5 +1,13 @@
 version: 2
 jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.13
+    steps:
+      - checkout
+      - run:
+          name: building
+          command: go build .
   test:
     docker:
       - image: circleci/golang:1.13
@@ -22,7 +30,7 @@ jobs:
           path: results
 
 
-  build:
+  upload:
     docker:
       - image: circleci/golang:1.13
     steps:
@@ -35,5 +43,10 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - test
       - build
+      - test
+          requires:
+            - build
+      - upload
+          requires:
+            - test
