@@ -20,13 +20,20 @@ jobs:
           path: coverage.html
       - store_test_results:
           path: results
+
+
+  build:
+    docker:
+      - image: circleci/golang:1.13
+    steps:
+      - checkout
       - run:
           name: upload_release
-          command: eval $ABR
-
+          command: .circleci/upload_release.sh
 
 workflows:
   version: 2
   build_and_test:
     jobs:
       - test
+      - build
