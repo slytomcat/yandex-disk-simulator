@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -16,14 +15,12 @@ import (
 	"time"
 )
 
-const (
-)
-
 var (
-	daemonLogFile = path.Join(os.TempDir(), "yandexdisksimulator.log")
-	socketPath    = path.Join(os.TempDir(), "yandexdisksimulator.socket")
-	version, _ = exec.Command("git", "describe", "--tags").Output()
-	helpMsg = `Usage:
+	daemonLogFile 	= path.Join(os.TempDir(), "yandexdisksimulator.log")
+	socketPath    	= path.Join(os.TempDir(), "yandexdisksimulator.socket")
+	version, _ 		= exec.Command("git", "describe", "--tags").Output()
+	verMsg  		= "%s\n    version: %s/n"
+	helpMsg 		= `Usage:
 	%s <cmd>
 Commands:
 	start	starts the daemon and begin starting events simulation
@@ -45,7 +42,6 @@ Environment variables:
 	Sim_ConfDir	can be used to set configuration directory path (default: ~/.config/yandex-disk)
 	
 	version: %s\n`
-	verMsg  = "%s\n    version: %s/n"
 )
 
 func notExists(path string) bool {
@@ -69,7 +65,7 @@ func doMain(args ...string) error {
 	}
 	dlog, err := os.OpenFile(daemonLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
-		return fmt.Errorf("%s opening error: %v", daemonLogFile, err)
+		return fmt.Errorf("file '%s' opening error: %w", daemonLogFile, err)
 	}
 	defer dlog.Close()
 	log.SetOutput(dlog)
@@ -79,6 +75,8 @@ func doMain(args ...string) error {
 	if len(cmd) > 8 {
 		cmd = cmd[0:8]
 	}
+	_, exe := path.Split(args[0])
+		
 	switch cmd {
 	case "daemon":
 		return daemon(args[2])
@@ -86,19 +84,17 @@ func doMain(args ...string) error {
 		return daemonize(args[0])
 	case "status", "stop", "sync", "error":
 		// only listed commands will be passed to daemon
-		return socketIneract(cmd)
+		return sendCommand(cmd)
 	case "setup":
 		return setup()
 	case "-h", "--help", "help":
-		_, exe := path.Split(args[0])
 		fmt.Printf(helpMsg, exe, version)
 		return nil
 	case "version", "-v":
-		_, exe := path.Split(args[0])
 		fmt.Printf(verMsg, exe, version)
 		return nil
 	default:
-		return fmt.Errorf("Error: unknown command: '" + cmd + "'")
+		return fmt.Errorf("Error: unknown command: '%s'", cmd)
 	}
 }
 
@@ -119,7 +115,9 @@ func daemonize(exe string) error {
 		fmt.Println("Fail")
 		return err
 	}
+
 	time.Sleep(time.Duration(startTime) * time.Millisecond)
+	
 	fmt.Println("Done")
 	return nil
 }
@@ -129,26 +127,26 @@ func daemon(syncDir string) error {
 	defer log.Println("Daemon stopped")
 	// disconnect from terminal
 	if _, err := syscall.Setsid(); err != nil {
-		return fmt.Errorf("syscall.Setsid() error : %v", err)
+		return fmt.Errorf("syscall.Setsid() error : %w", err)
 	}
 	logPath := path.Join(os.ExpandEnv(syncDir), ".sync")
 	if err := os.MkdirAll(logPath, 0755); err != nil {
-		return fmt.Errorf(logPath+" creation error:", err)
+		return fmt.Errorf("%s creation error: %w", logPath, err)
 	}
 	// open logfile
 	logFilePath := path.Join(logPath, "cli.log")
 	logfile, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
-		return fmt.Errorf(logFilePath+" opening error:", err)
+		return fmt.Errorf("%s opening error: %w", logFilePath, err)
 	}
 	defer func() {
-		logfile.Write([]byte("exit/n"))
+		logfile.WriteString("exit/n")
 		logfile.Close()
 	}()
 	// open socket as server
 	ln, err := net.Listen("unix", socketPath)
 	if err != nil {
-		return fmt.Errorf("listen error: %v", err)
+		return fmt.Errorf("Socket listen error: %w", err)
 	}
 	defer ln.Close()
 
@@ -156,7 +154,7 @@ func daemon(syncDir string) error {
 	sim := NewSimilator()
 	// begin start simulation
 	sim.Simulate("Start", logfile)
-
+    
 	buf := make([]byte, 8)
 	for {
 		// accept next command from socket
@@ -195,20 +193,20 @@ func daemon(syncDir string) error {
 	}
 }
 
-func socketIneract(cmd string) error {
+func sendCommand(cmd string) error {
 	if notExists(socketPath) {
-		return fmt.Errorf("Error: daemon not started")
+		return errors.New("Error: daemon not started")
 	}
 	// open socket as client
 	conn, err := net.DialTimeout("unix", socketPath, time.Duration(time.Second))
 	if err != nil {
-		return fmt.Errorf("Socket dial error: %v", err)
+		return fmt.Errorf("Socket dial error: %w", err)
 	}
 	defer conn.Close()
 	// send cmd to socket
 	_, err = conn.Write([]byte(cmd))
 	if err != nil {
-		return fmt.Errorf("Socket write error: %v", err)
+		return fmt.Errorf("Socket write error: %w", err)
 	}
 	// read response
 	buf := make([]byte, 512)
@@ -218,16 +216,16 @@ func socketIneract(cmd string) error {
 			fmt.Println("Daemon stopped.")
 			return nil
 		}
-		return fmt.Errorf("Socket read error: %v ", err)
+		return fmt.Errorf("Socket read error: %w ", err)
 	}
-	m := buf[0:n]
+	m := string(buf[0:n])
 	if n > 1 {
 		// Handle errors from daemon
-		if bytes.HasPrefix(m, []byte("Error:")) {
-			return fmt.Errorf("%s", m)
+		if strings.HasPrefix(m, ("Error:")) {
+			return fmt.Errorf(m)
 		}
 		// output non-error messages from daemon
-		fmt.Printf("%s\n", m)
+		fmt.Println(m)
 	}
 	return nil
 }
@@ -241,7 +239,7 @@ func checkCfg() (string, error) {
 	log.Println("Config file: ", confFile)
 	f, err := os.Open(confFile)
 	if err != nil {
-		return "", fmt.Errorf("%s", "Error: option 'dir' is missing")
+		return "", errors.New("Error: option 'dir' is missing")
 	}
 	defer f.Close()
 	reader := bufio.NewReader(f)
@@ -266,11 +264,11 @@ func checkCfg() (string, error) {
 	}
 	// return error if value of DIR is empty"
 	if notExists(dir) {
-		return "", fmt.Errorf("%s", "Error: option 'dir' is missing")
+		return "", errors.New("Error: option 'dir' is missing")
 	}
 	// return error if value of AUTH is empty
 	if notExists(auth) {
-		return "", fmt.Errorf("%s", "Error: file with OAuth token hasn't been found.\nUse 'token' command to authenticate and create this file")
+		return "", errors.New("Error: file with OAuth token hasn't been found.\nUse 'token' command to authenticate and create this file")
 	}
 	return dir, nil
 }
@@ -285,18 +283,18 @@ func setup() error {
 		syncPath = os.ExpandEnv("$HOME/.config/yandex-disk")
 	}
 	if err := os.MkdirAll(cfgPath, 0777); err != nil {
-		return fmt.Errorf("Config path creation error: %v", err)
+		return fmt.Errorf("Config path creation error: %w", err)
 	}
 	auth := path.Join(cfgPath, "passwd")
 	if notExists(auth) {
 		tfile, err := os.OpenFile(auth, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
-			return fmt.Errorf("yandex-disk token file creation error: %v", err)
+			return fmt.Errorf("yandex-disk token file creation error: %w", err)
 		}
 		defer tfile.Close()
 		// yandex-disk-simulator doesn't require the real token
 		if _, err = tfile.Write([]byte("token")); err != nil {
-			return fmt.Errorf("yandex-disk token file write error: %v", err)
+			return fmt.Errorf("yandex-disk token file write error: %w", err)
 		}
 	}
 	cfg := path.Join(cfgPath, "config.cfg")
@@ -307,10 +305,10 @@ func setup() error {
 	defer cfile.Close()
 	_, err = cfile.Write([]byte("proxy=\"no\"\n\nauth=\"" + auth + "\"\ndir=\"" + syncPath + "\"\n\n"))
 	if err != nil {
-		return fmt.Errorf("Can't write to config file: %v", err)
+		return fmt.Errorf("Can't write to config file: %w", err)
 	}
 	if err = os.MkdirAll(syncPath, 0777); err != nil {
-		return fmt.Errorf("synchronization Dir creation error: %v", err)
+		return fmt.Errorf("synchronization Dir creation error: %w", err)
 	}
 	return nil
 }
