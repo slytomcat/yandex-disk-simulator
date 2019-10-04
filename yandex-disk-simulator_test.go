@@ -136,7 +136,7 @@ func TestDoMain08FailWrongDaemonStart(t *testing.T) {
 	stdOut := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	err := doMain("yandex-disk-simulator-wrong", "start")
+	err := doMain("wrong-simulator", "start")
 	w.Close()
 	out, _ := ioutil.ReadAll(r)
 	res := string(out)
