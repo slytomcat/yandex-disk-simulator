@@ -25,19 +25,19 @@ const (
 func TestMain(m *testing.M) {
 	flag.Parse()
 
-	exec.Command("go", "build", "yandex-disk-simulator.go").Run()
+	exec.Command("go", "build").Run()
 	cwd, _ := os.Getwd()
 	os.Setenv("PATH", cwd+":"+os.Getenv("PATH"))
 	SyncDirPath = os.ExpandEnv(SyncDirPath)
 	os.Setenv("Sim_SyncDir", SyncDirPath)
 	ConfigFilePath = os.ExpandEnv(ConfigFilePath)
 	os.Setenv("Sim_ConfDir", ConfigFilePath)
-	exec.Command("yandex-disk-simulator", "stop").Run()
+	exec.Command(exe, "stop").Run()
 	// Run tests
 	e := m.Run()
 
 	// Clearance
-	exec.Command("yandex-disk-simulator", "stop").Run()
+	exec.Command(exe, "stop").Run()
 	os.RemoveAll(ConfigFilePath)
 	os.RemoveAll(SyncDirPath)
 
@@ -45,7 +45,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestDoMain00NoCommand(t *testing.T) {
-	err := doMain("yandex-disk-simulator")
+	err := doMain(exe)
 	if err == nil {
 		t.Error("no error for no command")
 		return
@@ -59,13 +59,13 @@ func testCmdWithCapture(cmd string, t *testing.T) string {
 	stdOut := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	err := doMain("yandex-disk-simulator", cmd)
+	err := doMain(exe, cmd)
 	w.Close()
-	if err != nil {
-		t.Errorf("error while executing command 'yandex-disk-simulator %s': %s", cmd, err)
-	}
 	out, _ := ioutil.ReadAll(r)
 	os.Stdout = stdOut
+	if err != nil {
+		t.Errorf("error while executing command '%s %s': %s", exe, cmd, err)
+	}
 	return string(out)
 }
 
@@ -74,7 +74,7 @@ func TestDoMain01Help(t *testing.T) {
 	args := os.Args
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	os.Args = []string{"yandex-disk-simulator", "help"}
+	os.Args = []string{exe, "help"}
 	main()
 	w.Close()
 	out, _ := ioutil.ReadAll(r)
@@ -93,7 +93,7 @@ func TestDoMain01Version(t *testing.T) {
 }
 
 func TestDoMain02WrongCommand(t *testing.T) {
-	err := doMain("yandex-disk-simulator", "wrongCMD_cut_it")
+	err := doMain(exe, "wrongCMD_cut_it")
 	if err == nil {
 		t.Error("no error for wrong command")
 		return
@@ -104,7 +104,7 @@ func TestDoMain02WrongCommand(t *testing.T) {
 }
 
 func TestDoMain04StartNoConfig(t *testing.T) {
-	err := doMain("yandex-disk-simulator", "start")
+	err := doMain(exe, "start")
 	if err == nil {
 		t.Error("no error for start without config")
 		return
@@ -115,14 +115,14 @@ func TestDoMain04StartNoConfig(t *testing.T) {
 }
 
 func TestDoMain05Setup(t *testing.T) {
-	err := doMain("yandex-disk-simulator", "setup")
+	err := doMain(exe, "setup")
 	if err != nil {
 		t.Error("error for setup :", err)
 	}
 }
 
 func TestDoMain07Command2NotStarted(t *testing.T) {
-	err := doMain("yandex-disk-simulator", "status")
+	err := doMain(exe, "status")
 	if err == nil {
 		t.Error("no error for command to not started")
 		return
@@ -132,22 +132,22 @@ func TestDoMain07Command2NotStarted(t *testing.T) {
 	}
 }
 
-// func TestDoMain08FailWrongDaemonStart(t *testing.T) {
-// 	stdOut := os.Stdout
-// 	r, w, _ := os.Pipe()
-// 	os.Stdout = w
-// 	err := doMain("wrong-simulator", "start")
-// 	w.Close()
-// 	os.Stdout = stdOut
-// 	out, _ := ioutil.ReadAll(r)
-// 	res := string(out)
-// 	if err == nil {
-// 		t.Error("No error with starting of incorrect daemon")
-// 	}
-// 	if res != "Starting daemon process...Fail\n" {
-// 		t.Errorf("incorrect message: %s", res)
-// 	}
-// }
+func TestDoMain08FailWrongDaemonStart(t *testing.T) {
+	stdOut := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	err := doMain("wrong-simulator", "start")
+	w.Close()
+	os.Stdout = stdOut
+	out, _ := ioutil.ReadAll(r)
+	res := string(out)
+	if err == nil {
+		t.Error("No error with starting of incorrect daemon")
+	}
+	if res != "Starting daemon process...Fail\n" {
+		t.Errorf("incorrect message: %s", res)
+	}
+}
 
 func TestDoMain10StartSuccess(t *testing.T) {
 	res := testCmdWithCapture("start", t)
@@ -165,9 +165,9 @@ func TestDoMain11StartSecondary(t *testing.T) {
 
 func TestDoMain15StartDaemon(t *testing.T) {
 	// stop already executed daemon
-	exec.Command("yandex-disk-simulator", "stop").Run()
+	exec.Command(exe, "stop").Run()
 	// start daemon in separate gorutine
-	go doMain("yandex-disk-simulator", "daemon", SyncDirPath)
+	go doMain(exe, "daemon", SyncDirPath)
 	time.Sleep(10 * time.Millisecond)
 }
 
@@ -179,7 +179,7 @@ func TestDoMain17Status(t *testing.T) {
 }
 
 func execCommand(command string) {
-	err := doMain("yandex-disk-simulator", command)
+	err := doMain(exe, command)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -485,7 +485,7 @@ func Example64StatusAfter1stEvent() {
 }
 
 // func Example80StatusInEnv() {
-// 	exe, _ := exec.LookPath("yandex-disk-simulator")
+// 	exe, _ := exec.LookPath(exe)
 // 	cmd := exec.Command("env", "-i", exe, "status")
 // 	cmd.Stdout = os.Stdout
 // 	cmd.Stderr = os.Stdout
