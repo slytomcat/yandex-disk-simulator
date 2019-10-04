@@ -18,6 +18,10 @@ var (
 	ConfigFilePath = "$HOME/.config/TeSt_Yandex.Disk_TeSt"
 )
 
+const (
+	exe = "yandex-disk-simulator"
+)
+
 func TestMain(m *testing.M) {
 	flag.Parse()
 
@@ -28,7 +32,7 @@ func TestMain(m *testing.M) {
 	os.Setenv("Sim_SyncDir", SyncDirPath)
 	ConfigFilePath = os.ExpandEnv(ConfigFilePath)
 	os.Setenv("Sim_ConfDir", ConfigFilePath)
-
+	exec.Command("yandex-disk-simulator", "stop").Run()
 	// Run tests
 	e := m.Run()
 
@@ -41,7 +45,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestDoMain00NoCommand(t *testing.T) {
-	err := doMain([]string{"yandex-disk-simulator"})
+	err := doMain("yandex-disk-simulator")
 	if err == nil {
 		t.Error("no error for no command")
 		return
@@ -49,6 +53,20 @@ func TestDoMain00NoCommand(t *testing.T) {
 	if err.Error() != "Error: command hasn't been specified. Use the --help command to access help\nor setup to launch the setup wizard." {
 		t.Error("incorrect message: " + err.Error())
 	}
+}
+
+func testCmdWithCapture(cmd string, t *testing.T) string {
+	stdOut := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	err := doMain("yandex-disk-simulator", cmd)
+	w.Close()
+	if err != nil {
+		t.Error("error for ", cmd, ":", err)
+	}
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = stdOut
+	return string(out)
 }
 
 func TestDoMain01Help(t *testing.T) {
@@ -62,13 +80,20 @@ func TestDoMain01Help(t *testing.T) {
 	out, _ := ioutil.ReadAll(r)
 	os.Stdout = stdOut
 	os.Args = args
-	if string(out) != helpMsg+"\n" {
+	if string(out) != fmt.Sprintf(helpMsg, exe, version) {
 		t.Error("incorrect message:", out)
 	}
 }
 
+func TestDoMain01Version(t *testing.T) {
+	res := testCmdWithCapture("-v", t)
+	if res != fmt.Sprintf(verMsg, exe, version) {
+		t.Error("incorrect message:", res)
+	}
+}
+
 func TestDoMain02WrongCommand(t *testing.T) {
-	err := doMain([]string{"yandex-disk-simulator", "wrongCMD_cut_it"})
+	err := doMain("yandex-disk-simulator", "wrongCMD_cut_it")
 	if err == nil {
 		t.Error("no error for wrong command")
 		return
@@ -79,7 +104,7 @@ func TestDoMain02WrongCommand(t *testing.T) {
 }
 
 func TestDoMain04StartNoConfig(t *testing.T) {
-	err := doMain([]string{"yandex-disk-simulator", "start"})
+	err := doMain("yandex-disk-simulator", "start")
 	if err == nil {
 		t.Error("no error for start without config")
 		return
@@ -90,14 +115,14 @@ func TestDoMain04StartNoConfig(t *testing.T) {
 }
 
 func TestDoMain05Setup(t *testing.T) {
-	err := doMain([]string{"yandex-disk-simulator", "setup"})
+	err := doMain("yandex-disk-simulator", "setup")
 	if err != nil {
 		t.Error("error for setup :", err)
 	}
 }
 
 func TestDoMain07Command2NotStarted(t *testing.T) {
-	err := doMain([]string{"yandex-disk-simulator", "status"})
+	err := doMain("yandex-disk-simulator", "status")
 	if err == nil {
 		t.Error("no error for command to not started")
 		return
@@ -107,19 +132,23 @@ func TestDoMain07Command2NotStarted(t *testing.T) {
 	}
 }
 
-func testCmdWithCapture(cmd string, t *testing.T) string {
+func TestDoMain08FailWrongDaemonStart(t *testing.T) {
 	stdOut := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
-	err := doMain([]string{"yandex-disk-simulator", cmd})
-	if err != nil {
-		t.Error("error for ", cmd, ":", err)
-	}
+	err := doMain("yandex-disk-simulator-wrong", "start")
 	w.Close()
 	out, _ := ioutil.ReadAll(r)
+	res := string(out)
 	os.Stdout = stdOut
-	return string(out)
+	if err == nil {
+		t.Error("No error with starting of incorrect daemon")
+	}
+	if res != "Starting daemon process...Fail\n" {
+		t.Errorf("incorrect message: %s", res)
+	}
 }
+
 func TestDoMain10StartSuccess(t *testing.T) {
 	res := testCmdWithCapture("start", t)
 	if res != "Starting daemon process...Done\n" {
@@ -138,7 +167,7 @@ func TestDoMain15StartDaemon(t *testing.T) {
 	// stop already executed daemon
 	exec.Command("yandex-disk-simulator", "stop").Run()
 	// start daemon in separate gorutine
-	go doMain([]string{"yandex-disk-simulator", "daemon", SyncDirPath})
+	go doMain("yandex-disk-simulator", "daemon", SyncDirPath)
 	time.Sleep(10 * time.Millisecond)
 }
 
@@ -150,7 +179,7 @@ func TestDoMain17Status(t *testing.T) {
 }
 
 func execCommand(command string) {
-	err := doMain([]string{"yandex-disk-simulator", command})
+	err := doMain("yandex-disk-simulator", command)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
