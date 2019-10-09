@@ -92,13 +92,17 @@ func (s *Simulator) Simulate(set string, logger io.Writer) {
 		for _, e := range seq {
 			s.setMsg(e.msg)
 			if e.logm != "" {
-				l.Write([]byte(e.logm + "\n"))
+				if _, err := l.Write([]byte(e.logm + "\n")); err != nil {
+					panic(err)
+				}
 				log.Println(e.logm)
 			}
 			time.Sleep(e.duration)
 		}
 		s.setMsg(msgIdle)
-		l.Write([]byte(set + " simulation finished\n"))
+		if _, err := l.Write([]byte(set + " simulation finished\n")); err != nil {
+			panic(err)
+		}
 		log.Println(set + " simulation finished")
 	}(sequence, logger)
 }
