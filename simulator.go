@@ -72,8 +72,8 @@ func NewSimilator() Simulator {
 	}
 }
 
+// setMsg is thread safe message update
 func (s *Simulator) setMsg(m string) {
-	// thread safe message update
 	s.msgLock.Lock()
 	s.message = m
 	s.msgLock.Unlock()
