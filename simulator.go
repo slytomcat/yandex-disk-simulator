@@ -25,11 +25,13 @@ type Simulator struct {
 	msgLock     sync.RWMutex
 	symLock     sync.Mutex
 	simulations map[string][]event
+	logger      io.Writer
 }
 
 // NewSimilator - constructor of new Simulator
-func NewSimilator() Simulator {
-	return Simulator{
+func NewSimilator(logger io.Writer) *Simulator {
+	return &Simulator{
+		logger:  logger,
 		message: " ",
 		simulations: map[string][]event{
 			"Start": []event{
@@ -81,7 +83,7 @@ func (s *Simulator) setMsg(m string) {
 
 // Simulate starts the set of events simulation
 // The set must be one of: "Start", "Synchronization" or "Error"
-func (s *Simulator) Simulate(set string, logger io.Writer) {
+func (s *Simulator) Simulate(set string) {
 	sequence, ok := s.simulations[set]
 	if !ok {
 		return
@@ -104,7 +106,7 @@ func (s *Simulator) Simulate(set string, logger io.Writer) {
 			panic(err)
 		}
 		log.Println(set + " simulation finished")
-	}(sequence, logger)
+	}(sequence, s.logger)
 }
 
 // GetMessage returns the current status message
