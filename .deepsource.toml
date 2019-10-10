@@ -8,8 +8,8 @@ test_patterns = [
 name = "go"
 enabled = true
 
-name = "test-coverage"
-enabled = true
-
   [analyzers.meta]
   import_path = "https://github.com/slytomcat/yandex-disk-simulator"
+
+name = "test-coverage"
+enabled = true
