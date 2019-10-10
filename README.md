@@ -8,7 +8,7 @@
 You can get compiled binaries (ELF) for linux/amd64 and linux/386 platforms from [last release](https://github.com/slytomcat/yandex-disk-simulator/releases/latest) or bild it yourself.
 
 **Requerements:** 
- - go v.1.x and higher
+ - go v.1.13 and higher
 
 **Buiding:**
 
