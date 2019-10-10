@@ -11,4 +11,7 @@ enabled = true
   [analyzers.meta]
   import_path = "https://github.com/slytomcat/yandex-disk-simulator"
 
+[[analyzers]]
+name = "test-coverage"
+enabled = true
 
