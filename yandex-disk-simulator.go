@@ -52,6 +52,7 @@ func notExists(path string) bool {
 	return false
 }
 
+// OS format main function
 func main() {
 	if err := doMain(os.Args...); err != nil {
 		fmt.Println(err)
@@ -59,13 +60,14 @@ func main() {
 	}
 }
 
+// Go format of main function
 func doMain(args ...string) error {
 	if len(args) == 1 {
 		return fmt.Errorf("%s", "Error: command hasn't been specified. Use the --help command to access help\nor setup to launch the setup wizard.")
 	}
 	dlog, err := os.OpenFile(daemonLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
-		return fmt.Errorf("file '%s' opening error: %w", daemonLogFile, err)
+		return fmt.Errorf("daemon log file '%s' opening error: %w", daemonLogFile, err)
 	}
 	defer dlog.Close()
 	log.SetOutput(dlog)
@@ -84,7 +86,7 @@ func doMain(args ...string) error {
 		return daemonize(args[0])
 	case "status", "stop", "sync", "error":
 		// only listed commands will be passed to daemon
-		return sendCommand(cmd)
+		return handleCommand(cmd)
 	case "setup":
 		return setup()
 	case "-h", "--help", "help":
@@ -98,7 +100,7 @@ func doMain(args ...string) error {
 	}
 }
 
-// daemonize strts the second instance of utility (daemon)
+// daemonize strts the second instance of utility as a daemon process
 func daemonize(exe string) error {
 	// check configuration and get sync dir
 	dir, err := checkCfg()
@@ -116,7 +118,7 @@ func daemonize(exe string) error {
 		fmt.Println("Fail")
 		return err
 	}
-
+	// simulate the starting process
 	time.Sleep(time.Duration(startTime) * time.Millisecond)
 
 	fmt.Println("Done")
@@ -127,12 +129,9 @@ func daemonize(exe string) error {
 func daemon(syncDir string) error {
 	log.Println("Daemon started")
 	defer log.Println("Daemon stopped")
-	// disconnect from terminal
-	if _, err := syscall.Setsid(); err != nil {
-		return fmt.Errorf("syscall.Setsid() error : %w", err)
-	}
 	logPath := path.Join(os.ExpandEnv(syncDir), ".sync")
-	if err := os.MkdirAll(logPath, 0750); err != nil {
+	err := os.MkdirAll(logPath, 0750)
+	if err != nil {
 		return fmt.Errorf("%s creation error: %w", logPath, err)
 	}
 	// open logfile
@@ -142,81 +141,94 @@ func daemon(syncDir string) error {
 		return fmt.Errorf("%s opening error: %w", logFilePath, err)
 	}
 	defer func() {
-		if _, err := logfile.WriteString("exit/n"); err != nil {
+		if _, err = logfile.WriteString("exit/n"); err != nil {
 			panic(err)
 		}
-		if err := logfile.Close(); err != nil {
+		if err = logfile.Close(); err != nil {
 			panic(err)
 		}
 	}()
 	// open socket as server
 	ln, err := net.Listen("unix", socketPath)
 	if err != nil {
-		return fmt.Errorf("socket listen error: %w", err)
+		return handleErr("socket listener creation error: %w", err)
 	}
-	defer func() {
-		if err := ln.Close(); err != nil {
-			panic(err)
-		}
-	}()
-	// Create new simulator engine
-	sim := NewSimilator()
-	// begin start simulation
-	sim.Simulate("Start", logfile)
+	defer ln.Close()
+	// disconnect from parent process to become a daemon process
+	if _, err = syscall.Setsid(); err != nil {
+		return handleErr("syscall.Setsid() error : %w", err)
+	}
 
-	buf := make([]byte, 8)
+	// create new simulator engine
+	sim := NewSimilator(logfile)
+	// begin simulation of initial synchronisation
+	sim.Simulate("Start")
+
 	for {
 		// accept next command from socket
 		conn, err := ln.Accept()
 		if err != nil {
-			return err
+			return handleErr("accepting connection error: %w", err)
 		}
-		nr, err := conn.Read(buf)
+		exit, err := handleConnection(conn, sim, syncDir)
 		if err != nil {
 			return err
 		}
-		cmd := string(buf[0:nr])
-		log.Println("Received:", cmd)
-		if notExists(syncDir) && cmd != "stop" {
-			if _, err := conn.Write([]byte("Error: Indicated directory does not exist")); err != nil {
-				return err
-			}
-			if err := conn.Close(); err != nil {
-				return err
-			}
-			continue
-		}
-		// handle command
-		switch cmd {
-		case "status": // reply into socket by current message
-			if _, err := conn.Write([]byte(sim.GetMessage())); err != nil {
-				return err
-			}
-		case "sync": // begin the synchronization simulation
-			sim.Simulate("Synchronization", logfile)
-			// we have to send back something to show that daemon still active
-			if _, err := conn.Write([]byte{0}); err != nil {
-				return err
-			}
-		case "error": // switch to error state
-			sim.Simulate("Error", logfile)
-			if _, err := conn.Write([]byte{0}); err != nil {
-				return err
-			}
-		case "stop": // stop the daemon
-			// send back nothing to show that daemon is not active any more
-			if err := conn.Close(); err != nil {
-				return err
-			}
+		if exit {
 			return nil
-		} //default: there is no other options (should be) possible
-		if err := conn.Close(); err != nil {
-			return err
 		}
 	}
 }
 
-func sendCommand(cmd string) error {
+func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, error) {
+	defer conn.Close()
+
+	buf := make([]byte, 8)
+	nr, err := conn.Read(buf)
+	if err != nil {
+		return true, handleErr("connection reading error: %w", err)
+	}
+	cmd := string(buf[0:nr])
+	log.Println("Received:", cmd)
+	if notExists(syncDir) && cmd != "stop" {
+		if _, err = conn.Write([]byte("Error: Indicated directory does not exist")); err != nil {
+			return true, handleErr("writing to connecton error: %w", err)
+		}
+		return false, nil
+	}
+	// handle command and send back the command execution results
+	switch cmd {
+	case "status": // reply into socket by current message
+		_, err = conn.Write([]byte(sim.GetMessage()))
+	case "sync": // begin the synchronization simulation
+		sim.Simulate("Synchronization")
+		// we have to send back something to show that daemon still active
+		_, err = conn.Write([]byte{0})
+	case "error": // switch to error state
+		sim.Simulate("Error")
+		_, err = conn.Write([]byte{0})
+	case "stop": // stop the daemon
+		// send back nothing to show that daemon is not active any more
+		return true, nil
+	default:
+		return true, handleErr("command handling error: unexpected command '%s' received", cmd)
+	}
+	// handle all connection writing errors in switch here
+	if err != nil {
+		return true, handleErr("writing to connection error: %w", err)
+	}
+	return false, nil
+}
+
+// handle errors by writing them in to log file
+func handleErr(format string, params ...interface{}) error {
+	err := fmt.Errorf(format, params...)
+	log.Println(err)
+	return err
+}
+
+// send command to daemon and handle replay from it
+func handleCommand(cmd string) error {
 	if notExists(socketPath) {
 		return errors.New("Error: daemon not started") // Original product error. skipcq: SCC-ST1005
 	}
