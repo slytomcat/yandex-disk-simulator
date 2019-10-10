@@ -22,6 +22,11 @@ jobs:
           name: Tests 
           command: go test -v -race -coverprofile cover.out 2>&1 | tee /dev/tty | go-junit-report > results/results.xml
       - run: 
+          name: Report coverage to deepsource.io
+          command: |
+            curl https://deepsource.io/cli | sh
+            ./bin/deepsource report --analyzer test-coverage --key go --value-file ./cover.out
+      - run: 
           name: Format coverage
           command: go tool cover -html=cover.out -o coverage.html
       - store_artifacts:
