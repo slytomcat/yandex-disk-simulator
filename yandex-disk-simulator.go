@@ -94,7 +94,7 @@ func doMain(args ...string) error {
 		fmt.Printf(verMsg, exe, version)
 		return nil
 	default:
-		return fmt.Errorf("Error: unknown command: '%s'", cmd)
+		return fmt.Errorf("Error: unknown command: '%s'", cmd) // Original product error. skipcq: SCC-ST1005
 	}
 }
 
@@ -152,7 +152,7 @@ func daemon(syncDir string) error {
 	// open socket as server
 	ln, err := net.Listen("unix", socketPath)
 	if err != nil {
-		return fmt.Errorf("Socket listen error: %w", err)
+		return fmt.Errorf("socket listen error: %w", err)
 	}
 	defer func() {
 		if err := ln.Close(); err != nil {
@@ -218,18 +218,18 @@ func daemon(syncDir string) error {
 
 func sendCommand(cmd string) error {
 	if notExists(socketPath) {
-		return errors.New("Error: daemon not started")
+		return errors.New("Error: daemon not started") // Original product error. skipcq: SCC-ST1005
 	}
 	// open socket as client
 	conn, err := net.DialTimeout("unix", socketPath, time.Duration(time.Second))
 	if err != nil {
-		return fmt.Errorf("Socket dial error: %w", err)
+		return fmt.Errorf("socket dial error: %w", err)
 	}
 	defer conn.Close()
 	// send cmd to socket
 	_, err = conn.Write([]byte(cmd))
 	if err != nil {
-		return fmt.Errorf("Socket write error: %w", err)
+		return fmt.Errorf("socket write error: %w", err)
 	}
 	// read response
 	buf := make([]byte, 512)
@@ -239,7 +239,7 @@ func sendCommand(cmd string) error {
 			fmt.Println("Daemon stopped.")
 			return nil
 		}
-		return fmt.Errorf("Socket read error: %w ", err)
+		return fmt.Errorf("socket read error: %w ", err)
 	}
 	m := string(buf[0:n])
 	if n > 1 {
@@ -262,7 +262,7 @@ func checkCfg() (string, error) {
 	log.Println("Config file: ", confFile)
 	f, err := os.Open(confFile)
 	if err != nil {
-		return "", errors.New("Error: option 'dir' is missing")
+		return "", errors.New("Error: option 'dir' is missing") // Original product error. skipcq: SCC-ST1005
 	}
 	defer f.Close()
 	reader := bufio.NewReader(f)
@@ -283,15 +283,15 @@ func checkCfg() (string, error) {
 		}
 	}
 	if err != nil && err != io.EOF {
-		return "", err
+		return "", fmt.Errorf("reading of '%s' error: %w", confFile, err)
 	}
 	// return error if value of DIR is empty"
 	if notExists(dir) {
-		return "", errors.New("Error: option 'dir' is missing")
+		return "", errors.New("Error: option 'dir' is missing") // Original product error. skipcq: SCC-ST1005
 	}
 	// return error if value of AUTH is empty
 	if notExists(auth) {
-		return "", errors.New("Error: file with OAuth token hasn't been found.\nUse 'token' command to authenticate and create this file")
+		return "", errors.New("Error: file with OAuth token hasn't been found.\nUse 'token' command to authenticate and create this file") // Original product error. skipcq: SCC-ST1005
 	}
 	return dir, nil
 }
@@ -306,40 +306,37 @@ func setup() error {
 		syncPath = os.ExpandEnv("$HOME/.config/yandex-disk")
 	}
 	if err := os.MkdirAll(cfgPath, 0750); err != nil {
-		return fmt.Errorf("Config path creation error: %w", err)
+		return fmt.Errorf("config path creation error: %w", err)
 	}
 	auth := path.Join(cfgPath, "passwd")
 	if notExists(auth) {
 		tfile, err := os.OpenFile(auth, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
 		if err != nil {
-			return fmt.Errorf("yandex-disk token file creation error: %w", err)
+			return fmt.Errorf("yandex-disk token file '%s' creation error: %w", auth, err)
 		}
-		defer func() {
-			if err := tfile.Close(); err != nil {
-				panic(err)
-			}
-		}()
 		// yandex-disk-simulator doesn't require the real token
 		if _, err = tfile.Write([]byte("token")); err != nil {
-			return fmt.Errorf("yandex-disk token file write error: %w", err)
+			return fmt.Errorf("yandex-disk token file '%s' writing error: %w", auth, err)
 		}
+		if err := tfile.Close(); err != nil {
+			return fmt.Errorf("yandex-disk token file '%s' closing error: %w", auth, err)
+		}
+
 	}
 	cfg := path.Join(cfgPath, "config.cfg")
 	cfile, err := os.OpenFile(cfg, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
-		return err
+		return fmt.Errorf("config file '%s' opening error: %w", cfg, err)
 	}
-	defer func() {
-		if err := cfile.Close(); err != nil {
-			panic(err)
-		}
-	}()
 	_, err = cfile.Write([]byte("proxy=\"no\"\n\nauth=\"" + auth + "\"\ndir=\"" + syncPath + "\"\n\n"))
 	if err != nil {
-		return fmt.Errorf("Can't write to config file: %w", err)
+		return fmt.Errorf("can't write to config file: %w", err)
+	}
+	if err := cfile.Close(); err != nil {
+		return fmt.Errorf("config file '%s' closing error: %w", cfg, err)
 	}
 	if err = os.MkdirAll(syncPath, 0750); err != nil {
-		return fmt.Errorf("synchronization Dir creation error: %w", err)
+		return fmt.Errorf("synchronization Dir '%s' creation error: %w", syncPath, err)
 	}
 	return nil
 }
