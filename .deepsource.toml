@@ -1,15 +1,19 @@
-version = 1
-
-test_patterns = [
-  "**/*_test.go"
-]
-
-[[analyzers]]
-name = "go"
-enabled = true
-
-  [analyzers.meta]
-  import_path = "https://github.com/slytomcat/yandex-disk-simulator"
-
-name = "test-coverage"
-enabled = true
+{
+  "version": 1,
+  "analyzers": [
+      {
+          "meta": {
+              "import_path": "https://github.com/slytomcat/yandex-disk-simulator"
+          },
+          "name": "go",
+          "enabled": true
+      },
+      {
+          name: "test-coverage"
+          enabled: true
+      }
+  ],
+  "test_patterns": [
+      "**/*_test.go"
+  ]
+}
