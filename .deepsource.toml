@@ -7,10 +7,6 @@
           },
           "name": "go",
           "enabled": true
-      },
-      {
-          name: "test-coverage"
-          enabled: true
       }
   ],
   "test_patterns": [
