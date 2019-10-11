@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	SyncDirPath    = "$HOME/TeSt_Yandex.Disk_TeSt"
-	ConfigFilePath = "$HOME/.config/TeSt_Yandex.Disk_TeSt"
+	SyncDirPath    = "$HOME/TeSt_Yandex.Disk_TeSt"         //
+	ConfigFilePath = "$HOME/.config/TeSt_yandex-disk_TeSt" //
 )
 
 const (
@@ -28,11 +28,16 @@ func TestMain(m *testing.M) {
 	exec.Command("go", "build").Run()
 	cwd, _ := os.Getwd()
 	os.Setenv("PATH", cwd+":"+os.Getenv("PATH"))
+
 	SyncDirPath = os.ExpandEnv(SyncDirPath)
 	os.Setenv("Sim_SyncDir", SyncDirPath)
+
 	ConfigFilePath = os.ExpandEnv(ConfigFilePath)
 	os.Setenv("Sim_ConfDir", ConfigFilePath)
+
+	// try to stop daemon
 	exec.Command(exe, "stop").Run()
+
 	// Run tests
 	e := m.Run()
 

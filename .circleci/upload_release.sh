@@ -31,7 +31,7 @@ export GOARCH=386
 go build .
 mv yandex-disk-simulator yandex-disk-simulator-linux-386
 
-echo "Uploading amd64"
+echo "Uploading 386"
 ./upload-github-release-asset.sh github_api_token=$GHAPITOKEN owner=$OWNER repo=$REPO tag="$TAG" filename=yandex-disk-simulator-linux-386
 
 
