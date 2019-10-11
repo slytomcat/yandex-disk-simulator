@@ -88,6 +88,7 @@ func (s *Simulator) Simulate(set string) {
 	if !ok {
 		return
 	}
+	// run simulation in separate goroutine
 	go func(seq []event, l io.Writer) {
 		s.symLock.Lock()
 		defer s.symLock.Unlock()
@@ -101,6 +102,7 @@ func (s *Simulator) Simulate(set string) {
 			}
 			time.Sleep(e.duration)
 		}
+		// at the end of simulation set the idle/synchronised status message
 		s.setMsg(msgIdle)
 		if _, err := l.Write([]byte(set + " simulation finished\n")); err != nil {
 			panic(err)
