@@ -319,16 +319,16 @@ func checkCfg() (string, error) {
 // setup creates the configuration file, file with token and folder for synchronisation
 func setup() error {
 
-	// determine the syncronisation path
-	cfgPath := os.Getenv("Sim_SyncDir")
+	// determine the configuration path
+	cfgPath := os.Getenv("Sim_ConfDir")
 	if cfgPath == "" {
-		cfgPath = os.ExpandEnv("$HOME/Yandex.Disk")
+		cfgPath = os.ExpandEnv("$HOME/.config/yandex-disk")
 	}
 
-	// determine the configuration path
-	syncPath := os.Getenv("Sim_ConfDir")
+	// determine the syncronisation path
+	syncPath := os.Getenv("Sim_SyncDir")
 	if syncPath == "" {
-		syncPath = os.ExpandEnv("$HOME/.config/yandex-disk")
+		syncPath = os.ExpandEnv("$HOME/Yandex.Disk")
 	}
 	if err := os.MkdirAll(cfgPath, 0750); err != nil {
 		return fmt.Errorf("config path creation error: %w", err)
