@@ -194,7 +194,7 @@ func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, erro
 		if _, err = conn.Write([]byte("Error: Indicated directory does not exist")); err != nil {
 			return true, handleErr("writing to connecton error: %w", err)
 		}
-		return false, nil
+		return false, nil // continue accepting of incoming connections
 	}
 	// handle command and send back the command execution results
 	switch cmd {
@@ -209,7 +209,7 @@ func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, erro
 		_, err = conn.Write([]byte{0})
 	case "stop": // stop the daemon
 		// send back nothing to show that daemon is not active any more
-		return true, nil
+		return true, nil // stop accepting of incoming connections
 	default:
 		return true, handleErr("command handling error: unexpected command '%s' received", cmd)
 	}
@@ -217,7 +217,7 @@ func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, erro
 	if err != nil {
 		return true, handleErr("writing to connection error: %w", err)
 	}
-	return false, nil
+	return false, nil // continue accepting of incoming connections
 }
 
 // handle errors by writing them in to log file
