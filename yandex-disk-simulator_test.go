@@ -14,24 +14,28 @@ import (
 )
 
 var (
-	SyncDirPath    = "$HOME/TeSt_Yandex.Disk_TeSt"         //
-	ConfigFilePath = "$HOME/.config/TeSt_yandex-disk_TeSt" //
+	SyncDirPath    = "$HOME/TeSt_Yandex.Disk_TeSt"         // testting synchronisation path
+	ConfigFilePath = "$HOME/.config/TeSt_yandex-disk_TeSt" // testting configuration path
 )
 
 const (
+	// default executable name
 	exe = "yandex-disk-simulator"
 )
 
 func TestMain(m *testing.M) {
 	flag.Parse()
 
+	// build the simulator
 	exec.Command("go", "build").Run()
+
+	// update the PATH to find executble simulator in it
 	cwd, _ := os.Getwd()
 	os.Setenv("PATH", cwd+":"+os.Getenv("PATH"))
 
+	// set environment variables for setup of simulator
 	SyncDirPath = os.ExpandEnv(SyncDirPath)
 	os.Setenv("Sim_SyncDir", SyncDirPath)
-
 	ConfigFilePath = os.ExpandEnv(ConfigFilePath)
 	os.Setenv("Sim_ConfDir", ConfigFilePath)
 
@@ -49,6 +53,7 @@ func TestMain(m *testing.M) {
 	os.Exit(e)
 }
 
+// try to start utility without command
 func TestDoMain00NoCommand(t *testing.T) {
 	err := doMain(exe)
 	if err == nil {
@@ -60,6 +65,7 @@ func TestDoMain00NoCommand(t *testing.T) {
 	}
 }
 
+// execute some command and capture stdout
 func testCmdWithCapture(cmd string, t *testing.T) string {
 	stdOut := os.Stdout
 	r, w, _ := os.Pipe()
@@ -74,6 +80,7 @@ func testCmdWithCapture(cmd string, t *testing.T) string {
 	return string(out)
 }
 
+// try to start with 'help' command
 func TestDoMain01Help(t *testing.T) {
 	stdOut := os.Stdout
 	args := os.Args
@@ -90,6 +97,7 @@ func TestDoMain01Help(t *testing.T) {
 	}
 }
 
+// try to ask for utility version
 func TestDoMain01Version(t *testing.T) {
 	res := testCmdWithCapture("-v", t)
 	if res != fmt.Sprintf(verMsg, exe, version) {
