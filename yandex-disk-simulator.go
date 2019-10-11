@@ -62,14 +62,19 @@ func main() {
 
 // Go format of main function
 func doMain(args ...string) error {
+	// check the number of arguments
 	if len(args) == 1 {
 		return fmt.Errorf("%s", "Error: command hasn't been specified. Use the --help command to access help\nor setup to launch the setup wizard.")
 	}
+
+	// open simulator log
 	dlog, err := os.OpenFile(daemonLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return fmt.Errorf("daemon log file '%s' opening error: %w", daemonLogFile, err)
 	}
 	defer dlog.Close()
+
+	// configure logging output
 	log.SetOutput(dlog)
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds)
 
@@ -79,6 +84,7 @@ func doMain(args ...string) error {
 	}
 	_, exe := path.Split(args[0])
 
+	// handle command
 	switch cmd {
 	case "daemon":
 		return daemon(args[2])
@@ -102,18 +108,24 @@ func doMain(args ...string) error {
 
 // daemonize strts the second instance of utility as a daemon process
 func daemonize(exe string) error {
+
 	// check configuration and get sync dir
 	dir, err := checkCfg()
 	if err != nil {
 		return err
 	}
+
+	// return in case when some other daemon is already started
 	if !notExists(socketPath) {
 		fmt.Println("Daemon is already running.")
 		return nil
 	}
+
+	// output the daemon starting message
 	fmt.Print("Starting daemon process...")
-	// get executable name from os.Args[0] passed as exe
-	// execute it with daemon command and sync dir as second parameter
+
+	// current executable name from os.Args[0] passed as exe parameter
+	// execute it with 'daemon' command and sync dir as second parameter
 	if err := exec.Command(exe, "daemon", dir).Start(); err != nil {
 		fmt.Println("Fail")
 		return err
@@ -129,32 +141,30 @@ func daemonize(exe string) error {
 func daemon(syncDir string) error {
 	log.Println("Daemon started")
 	defer log.Println("Daemon stopped")
+
+	// create daemon's synchronisation log path if it is not exists
 	logPath := path.Join(os.ExpandEnv(syncDir), ".sync")
 	err := os.MkdirAll(logPath, 0750)
 	if err != nil {
 		return fmt.Errorf("%s creation error: %w", logPath, err)
 	}
-	// open logfile
+	// open daemon's synchronisation log file
 	logFilePath := path.Join(logPath, "cli.log")
 	logfile, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return fmt.Errorf("%s opening error: %w", logFilePath, err)
 	}
-	defer func() {
-		if _, err = logfile.WriteString("exit/n"); err != nil {
-			panic(err)
-		}
-		if err = logfile.Close(); err != nil {
-			panic(err)
-		}
-	}()
-	// open socket as server
+	defer logfile.Close()
+
+	// open listening socket as server
 	ln, err := net.Listen("unix", socketPath)
 	if err != nil {
 		return handleErr("socket listener creation error: %w", err)
 	}
 	defer ln.Close()
+
 	// disconnect from parent process to become a daemon process
+	// disconnecting as late as possible to report to parent about all preparation errors
 	if _, err = syscall.Setsid(); err != nil {
 		return handleErr("syscall.Setsid() error : %w", err)
 	}
@@ -164,24 +174,31 @@ func daemon(syncDir string) error {
 	// begin simulation of initial synchronisation
 	sim.Simulate("Start")
 
+	// main daemon loop
 	for {
-		// accept next command from socket
+		// accept connection to socket
 		conn, err := ln.Accept()
 		if err != nil {
 			return handleErr("accepting connection error: %w", err)
 		}
+
+		// handle received connection
 		exit, err := handleConnection(conn, sim, syncDir)
 		if err != nil {
 			return err
 		}
+
+		// exit from loop in case of 'stop' command
 		if exit {
-			return nil
+			break
 		}
 	}
+	return nil
 }
 
 // handleConnection reads the command from connection, perform required operation,
 // and sends back the response on command through the same connection.
+// It returns error and stop flag that instruct the main daemon loop to continue or to stop.
 func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, error) {
 	defer conn.Close()
 
@@ -270,7 +287,8 @@ func handleCommand(cmd string) error {
 	return nil
 }
 
-// checkCfg checks the daemon configuration and requered files/directories
+// checkCfg checks the daemon configuration and requered files/directories.
+// It returns error or the synchronized path read from configuration file.
 func checkCfg() (string, error) {
 	// get the configuration file path
 	confDir := os.Getenv("Sim_ConfDir")
