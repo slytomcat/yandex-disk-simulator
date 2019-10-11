@@ -180,9 +180,12 @@ func daemon(syncDir string) error {
 	}
 }
 
+// handleConnection reads the command from connection, perform required operation,
+// and sends back the response on command through the same connection.
 func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, error) {
 	defer conn.Close()
 
+	// read command
 	buf := make([]byte, 8)
 	nr, err := conn.Read(buf)
 	if err != nil {
@@ -190,6 +193,7 @@ func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, erro
 	}
 	cmd := string(buf[0:nr])
 	log.Println("Received:", cmd)
+	// check the synchronization path existence and return error in case of absence of it
 	if notExists(syncDir) && cmd != "stop" {
 		if _, err = conn.Write([]byte("Error: Indicated directory does not exist")); err != nil {
 			return true, handleErr("writing to connecton error: %w", err)
@@ -211,6 +215,7 @@ func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, erro
 		// send back nothing to show that daemon is not active any more
 		return true, nil // stop accepting of incoming connections
 	default:
+		// unexpected command
 		return true, handleErr("command handling error: unexpected command '%s' received", cmd)
 	}
 	// handle all connection writing errors in switch here
@@ -227,7 +232,7 @@ func handleErr(format string, params ...interface{}) error {
 	return err
 }
 
-// send command to daemon and handle replay from it
+// send command to daemon and handle the responce from it
 func handleCommand(cmd string) error {
 	if notExists(socketPath) {
 		return errors.New("Error: daemon not started") // Original product error. skipcq: SCC-ST1005
@@ -265,13 +270,16 @@ func handleCommand(cmd string) error {
 	return nil
 }
 
+// checkCfg checks the daemon configuration and requered files/directories
 func checkCfg() (string, error) {
+	// get the configuration file path
 	confDir := os.Getenv("Sim_ConfDir")
 	if confDir == "" {
 		confDir = "$HOME/.config/yandex-disk"
 	}
 	confFile := path.Join(os.ExpandEnv(confDir), "config.cfg")
 	log.Println("Config file: ", confFile)
+	// read data from configuration file
 	f, err := os.Open(confFile)
 	if err != nil {
 		return "", errors.New("Error: option 'dir' is missing") // Original product error. skipcq: SCC-ST1005
@@ -297,29 +305,36 @@ func checkCfg() (string, error) {
 	if err != nil && err != io.EOF {
 		return "", fmt.Errorf("reading of '%s' error: %w", confFile, err)
 	}
-	// return error if value of DIR is empty"
+	// return error if value of DIR is empty or specified path is not exists
 	if notExists(dir) {
 		return "", errors.New("Error: option 'dir' is missing") // Original product error. skipcq: SCC-ST1005
 	}
-	// return error if value of AUTH is empty
+	// return error if value of AUTH is empty or specified path is not exists
 	if notExists(auth) {
 		return "", errors.New("Error: file with OAuth token hasn't been found.\nUse 'token' command to authenticate and create this file") // Original product error. skipcq: SCC-ST1005
 	}
 	return dir, nil
 }
 
+// setup creates the configuration file, file with token and folder for synchronisation
 func setup() error {
-	cfgPath := os.Getenv("Sim_ConfDir")
+
+	// determine the syncronisation path
+	cfgPath := os.Getenv("Sim_SyncDir")
 	if cfgPath == "" {
 		cfgPath = os.ExpandEnv("$HOME/Yandex.Disk")
 	}
-	syncPath := os.Getenv("Sim_SyncDir")
+
+	// determine the configuration path
+	syncPath := os.Getenv("Sim_ConfDir")
 	if syncPath == "" {
 		syncPath = os.ExpandEnv("$HOME/.config/yandex-disk")
 	}
 	if err := os.MkdirAll(cfgPath, 0750); err != nil {
 		return fmt.Errorf("config path creation error: %w", err)
 	}
+
+	// create the token file
 	auth := path.Join(cfgPath, "passwd")
 	if notExists(auth) {
 		tfile, err := os.OpenFile(auth, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
@@ -333,8 +348,9 @@ func setup() error {
 		if err := tfile.Close(); err != nil {
 			return fmt.Errorf("yandex-disk token file '%s' closing error: %w", auth, err)
 		}
-
 	}
+
+	// create the configuration file and write the configuration values in it
 	cfg := path.Join(cfgPath, "config.cfg")
 	cfile, err := os.OpenFile(cfg, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
@@ -347,6 +363,8 @@ func setup() error {
 	if err := cfile.Close(); err != nil {
 		return fmt.Errorf("config file '%s' closing error: %w", cfg, err)
 	}
+
+	// create the folder for synchronisation
 	if err = os.MkdirAll(syncPath, 0750); err != nil {
 		return fmt.Errorf("synchronization Dir '%s' creation error: %w", syncPath, err)
 	}
