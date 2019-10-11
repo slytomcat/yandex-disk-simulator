@@ -1,5 +1,20 @@
 package main
 
+//
+// The 'yandex-disk-simulator' is CLI tool to simulate the behavior of the original
+// 'yandex-disk' utility from Yandex (CLI daemon for files synchronisation with
+// Yandex.Disk on linux platform).
+//
+// The simulator acts like real utility but with predictable results (see the
+// NewSimilator function in simulator.go file to see the simulation sequences).
+//
+// The simulation re-produces only most common errors and fixed set of status messages.
+//
+// Autor: SlyTomCat (slytomcat@mail.ru)
+//
+// License: GPL v.3
+//
+
 import (
 	"bufio"
 	"errors"
