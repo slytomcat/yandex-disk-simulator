@@ -184,6 +184,10 @@ func daemon(syncDir string) error {
 		return handleErr("syscall.Setsid() error : %w", err)
 	}
 
+	// NOTE! All error after disconection from parent must be writen into simulator log
+	// as there is no other way to report about a problems in daemon mode.
+	// Use handleErr() to do so.
+
 	// create new simulator engine
 	sim := NewSimilator(logfile)
 	// begin simulation of initial synchronisation
@@ -200,7 +204,7 @@ func daemon(syncDir string) error {
 		// handle received connection
 		exit, err := handleConnection(conn, sim, syncDir)
 		if err != nil {
-			return err
+			return handleErr("connection handling error: %w", err)
 		}
 
 		// exit from loop in case of 'stop' command
@@ -209,6 +213,13 @@ func daemon(syncDir string) error {
 		}
 	}
 	return nil
+}
+
+// handleErr formats error, writes it into simulator log and returns formatted error
+func handleErr(format string, params ...interface{}) error {
+	err := fmt.Errorf(format, params...)
+	log.Printf("%v", err)
+	return err
 }
 
 // handleConnection reads the command from connection, perform required operation,
@@ -221,14 +232,14 @@ func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, erro
 	buf := make([]byte, 8)
 	nr, err := conn.Read(buf)
 	if err != nil {
-		return true, handleErr("connection reading error: %w", err)
+		return true, fmt.Errorf("connection reading error: %w", err)
 	}
 	cmd := string(buf[0:nr])
 	log.Println("Received:", cmd)
 	// check the synchronization path existence and return error in case of absence of it
 	if notExists(syncDir) && cmd != "stop" {
 		if _, err = conn.Write([]byte("Error: Indicated directory does not exist")); err != nil {
-			return true, handleErr("writing to connecton error: %w", err)
+			return true, fmt.Errorf("writing to connecton error: %w", err)
 		}
 		return false, nil // continue accepting of incoming connections
 	}
@@ -248,20 +259,13 @@ func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, erro
 		return true, nil // stop accepting of incoming connections
 	default:
 		// unexpected command
-		return true, handleErr("command handling error: unexpected command '%s' received", cmd)
+		return true, fmt.Errorf("command handling error: unexpected command '%s' received", cmd)
 	}
 	// handle all connection writing errors in switch here
 	if err != nil {
-		return true, handleErr("writing to connection error: %w", err)
+		return true, fmt.Errorf("writing to connection error: %w", err)
 	}
 	return false, nil // continue accepting of incoming connections
-}
-
-// handle errors by writing them in to log file
-func handleErr(format string, params ...interface{}) error {
-	err := fmt.Errorf(format, params...)
-	log.Println(err)
-	return err
 }
 
 // send command to daemon and handle the responce from it
