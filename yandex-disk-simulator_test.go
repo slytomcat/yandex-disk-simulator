@@ -27,7 +27,11 @@ func TestMain(m *testing.M) {
 	flag.Parse()
 
 	// build the simulator
-	exec.Command("go", "build").Run()
+	err := exec.Command("go", "build").Run()
+	if err != nil {
+		fmt.Printf("simulator building error: %v", err)
+		return
+	}
 
 	// update the PATH to find executble simulator in it
 	cwd, _ := os.Getwd()
@@ -39,18 +43,18 @@ func TestMain(m *testing.M) {
 	ConfigFilePath = os.ExpandEnv(ConfigFilePath)
 	os.Setenv("Sim_ConfDir", ConfigFilePath)
 
-	// try to stop daemon
+	// try to stop daemon if it left running
 	exec.Command(exe, "stop").Run()
 
 	// Run tests
-	e := m.Run()
+	errn := m.Run()
 
 	// Clearance
 	exec.Command(exe, "stop").Run()
 	os.RemoveAll(ConfigFilePath)
 	os.RemoveAll(SyncDirPath)
 
-	os.Exit(e)
+	os.Exit(errn)
 }
 
 // try to start utility without command
