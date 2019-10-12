@@ -8,7 +8,9 @@ import (
 )
 
 const (
-	msgIdle   = "Synchronization core status: idle\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n"
+	// Idle message of working daemon
+	msgIdle = "Synchronization core status: idle\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do'\n\tfile: 'd'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n"
+	// starting pause time
 	startTime = 500
 )
 
@@ -21,11 +23,11 @@ type event struct {
 
 // Simulator - the itnterface to simulator engine
 type Simulator struct {
-	message     string
-	msgLock     sync.RWMutex
-	symLock     sync.Mutex
-	simulations map[string][]event
-	logger      io.Writer
+	message     string             // current daemon status message
+	msgLock     sync.RWMutex       // message update lock
+	symLock     sync.Mutex         // simulation lock
+	simulations map[string][]event // simulation sequences
+	logger      io.Writer          // daemon synchronisation log
 }
 
 // NewSimilator - constructor of new Simulator

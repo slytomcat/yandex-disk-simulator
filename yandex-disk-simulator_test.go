@@ -14,24 +14,28 @@ import (
 )
 
 var (
-	SyncDirPath    = "$HOME/TeSt_Yandex.Disk_TeSt"         //
-	ConfigFilePath = "$HOME/.config/TeSt_yandex-disk_TeSt" //
+	SyncDirPath    = "$HOME/TeSt_Yandex.Disk_TeSt"         // testting synchronisation path
+	ConfigFilePath = "$HOME/.config/TeSt_yandex-disk_TeSt" // testting configuration path
 )
 
 const (
+	// default executable name
 	exe = "yandex-disk-simulator"
 )
 
 func TestMain(m *testing.M) {
 	flag.Parse()
 
+	// build the simulator
 	exec.Command("go", "build").Run()
+
+	// update the PATH to find executble simulator in it
 	cwd, _ := os.Getwd()
 	os.Setenv("PATH", cwd+":"+os.Getenv("PATH"))
 
+	// set environment variables for setup of simulator
 	SyncDirPath = os.ExpandEnv(SyncDirPath)
 	os.Setenv("Sim_SyncDir", SyncDirPath)
-
 	ConfigFilePath = os.ExpandEnv(ConfigFilePath)
 	os.Setenv("Sim_ConfDir", ConfigFilePath)
 
@@ -49,6 +53,7 @@ func TestMain(m *testing.M) {
 	os.Exit(e)
 }
 
+// try to start utility without command
 func TestDoMain00NoCommand(t *testing.T) {
 	err := doMain(exe)
 	if err == nil {
@@ -60,6 +65,7 @@ func TestDoMain00NoCommand(t *testing.T) {
 	}
 }
 
+// execute some command and capture stdout
 func testCmdWithCapture(cmd string, t *testing.T) string {
 	stdOut := os.Stdout
 	r, w, _ := os.Pipe()
@@ -74,6 +80,7 @@ func testCmdWithCapture(cmd string, t *testing.T) string {
 	return string(out)
 }
 
+// try to start with 'help' command
 func TestDoMain01Help(t *testing.T) {
 	stdOut := os.Stdout
 	args := os.Args
@@ -90,6 +97,7 @@ func TestDoMain01Help(t *testing.T) {
 	}
 }
 
+// try to ask for utility version
 func TestDoMain01Version(t *testing.T) {
 	res := testCmdWithCapture("-v", t)
 	if res != fmt.Sprintf(verMsg, exe, version) {
@@ -97,6 +105,7 @@ func TestDoMain01Version(t *testing.T) {
 	}
 }
 
+// try to start with wrong and long command
 func TestDoMain02WrongCommand(t *testing.T) {
 	err := doMain(exe, "wrongCMD_cut_it")
 	if err == nil {
@@ -108,6 +117,7 @@ func TestDoMain02WrongCommand(t *testing.T) {
 	}
 }
 
+// try to start without configuration
 func TestDoMain04StartNoConfig(t *testing.T) {
 	err := doMain(exe, "start")
 	if err == nil {
@@ -119,6 +129,7 @@ func TestDoMain04StartNoConfig(t *testing.T) {
 	}
 }
 
+// try to setup the configuration
 func TestDoMain05Setup(t *testing.T) {
 	err := doMain(exe, "setup")
 	if err != nil {
@@ -126,6 +137,7 @@ func TestDoMain05Setup(t *testing.T) {
 	}
 }
 
+// try 'ststus' command with not started daemon
 func TestDoMain07Command2NotStarted(t *testing.T) {
 	err := doMain(exe, "status")
 	if err == nil {
@@ -137,6 +149,7 @@ func TestDoMain07Command2NotStarted(t *testing.T) {
 	}
 }
 
+// try to start daemon with wrong executable name
 func TestDoMain08FailWrongDaemonStart(t *testing.T) {
 	stdOut := os.Stdout
 	r, w, _ := os.Pipe()
@@ -154,6 +167,7 @@ func TestDoMain08FailWrongDaemonStart(t *testing.T) {
 	}
 }
 
+// try to start configured daemon
 func TestDoMain10StartSuccess(t *testing.T) {
 	res := testCmdWithCapture("start", t)
 	if res != "Starting daemon process...Done\n" {
@@ -161,6 +175,7 @@ func TestDoMain10StartSuccess(t *testing.T) {
 	}
 }
 
+// try to start again
 func TestDoMain11StartSecondary(t *testing.T) {
 	res := testCmdWithCapture("start", t)
 	if res != "Daemon is already running.\n" {
@@ -168,6 +183,7 @@ func TestDoMain11StartSecondary(t *testing.T) {
 	}
 }
 
+// try to restart daemon (preparation for next test)
 func TestDoMain15StartDaemon(t *testing.T) {
 	// stop already executed daemon
 	exec.Command(exe, "stop").Run()
@@ -176,6 +192,7 @@ func TestDoMain15StartDaemon(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 }
 
+// try to get status of daemon right after start, it should be empty
 func TestDoMain17Status(t *testing.T) {
 	res := testCmdWithCapture("status", t)
 	if res != "" {
@@ -183,6 +200,7 @@ func TestDoMain17Status(t *testing.T) {
 	}
 }
 
+// command execution with error handling
 func execCommand(command string) {
 	err := doMain(exe, command)
 	if err != nil {
@@ -190,6 +208,7 @@ func execCommand(command string) {
 	}
 }
 
+// try to catch the daemon log update during specified timeout
 func getStatusAfterEvent(timeout time.Duration) {
 	watch, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -211,6 +230,7 @@ func getStatusAfterEvent(timeout time.Duration) {
 	}
 }
 
+// catch 1-st status change after start
 func Example20StatusAfter1stEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
@@ -231,6 +251,7 @@ func Example20StatusAfter1stEvent() {
 	// 	file: 'n'
 }
 
+// catch 2-nd status change after start
 func Example22StatusAfter2ndEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
@@ -239,6 +260,7 @@ func Example22StatusAfter2ndEvent() {
 	// 	The quota has not been received yet.
 }
 
+// catch 3-rd status change after start
 func Example24StatusAfter3rdEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
@@ -259,6 +281,7 @@ func Example24StatusAfter3rdEvent() {
 	// 	file: 'n'
 }
 
+// catch 4-th status change after start
 func Example26StatusAfter4thEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
@@ -279,6 +302,7 @@ func Example26StatusAfter4thEvent() {
 	// 	file: 'n'
 }
 
+// catch 5-th status change after start
 func Example28StatusAfter5thEvent() {
 	getStatusAfterEvent(time.Duration(6 * time.Second))
 	// Output:
@@ -303,6 +327,7 @@ func Example28StatusAfter5thEvent() {
 	// 	file: 'n'
 }
 
+// call the 'sync' command
 func Example40Sync() {
 	// call it
 	execCommand("sync")
@@ -310,6 +335,7 @@ func Example40Sync() {
 	//
 }
 
+// catch status after synchronisation start
 func Example42StatusAfterSyncStart() {
 	execCommand("status")
 	// Output:
@@ -334,6 +360,7 @@ func Example42StatusAfterSyncStart() {
 	// 	file: 'n'
 }
 
+// catch 2-nd status change after start of synchronisation
 func Example44StatusAfter2ndEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
@@ -359,6 +386,7 @@ func Example44StatusAfter2ndEvent() {
 	// 	file: 'n'
 }
 
+// catch 3-rd status change after start of synchronisation
 func Example46StatusAfter3rdEvent() {
 	getStatusAfterEvent(time.Duration(1 * time.Second))
 	// Output:
@@ -384,6 +412,7 @@ func Example46StatusAfter3rdEvent() {
 	// 	file: 'n'
 }
 
+// catch 4-th status change after start of synchronisation
 func Example48StatusAfter4thEvent() {
 	getStatusAfterEvent(time.Duration(3 * time.Second))
 	// Output:
@@ -409,6 +438,7 @@ func Example48StatusAfter4thEvent() {
 	// 	file: 'w'
 }
 
+// catch 5-th status change after start of synchronisation
 func Example50StatusAfter5thEvent() {
 	getStatusAfterEvent(time.Duration(1 * time.Second))
 	// Output:
@@ -433,12 +463,14 @@ func Example50StatusAfter5thEvent() {
 	// 	file: 'n'
 }
 
+// start error simulation
 func Example60Error() {
 	execCommand("error")
 	// Output:
 	//
 }
 
+// catch status change right after start of error synchronisation
 func Example62StatusAfterError() {
 	execCommand("status")
 	// Output:
@@ -465,6 +497,7 @@ func Example62StatusAfterError() {
 	// 	file: 'n'
 }
 
+// catch 2-nd status change after start of error synchronisation
 func Example64StatusAfter1stEvent() {
 	getStatusAfterEvent(time.Duration(1 * time.Second))
 	// Output:
@@ -489,6 +522,8 @@ func Example64StatusAfter1stEvent() {
 	// 	file: 'n'
 }
 
+// try to get status in empty enviroment
+// it starts to fail on CircleCI - env is not installed in the image
 // func Example80StatusInEnv() {
 // 	exe, _ := exec.LookPath(exe)
 // 	cmd := exec.Command("env", "-i", exe, "status")
@@ -517,6 +552,7 @@ func Example64StatusAfter1stEvent() {
 // 	// 	file: 'n'
 // }
 
+// try to get status with removed sinc path
 func Example90CommandWithoutDir() {
 	os.RemoveAll(SyncDirPath)
 	execCommand("status")
@@ -524,12 +560,14 @@ func Example90CommandWithoutDir() {
 	// Error: Indicated directory does not exist
 }
 
+// try to stop daemon
 func Example95Stop() {
 	execCommand("stop")
 	// Output:
 	// Daemon stopped.
 }
 
+// try to stop daemon again
 func Example97SecondaryStop() {
 	execCommand("stop")
 	// Output:
