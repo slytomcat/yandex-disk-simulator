@@ -9,7 +9,7 @@ You can get compiled binaries (ELF) for linux/amd64 and linux/386 platforms from
 
 There is no additional libraries requirements to run the simulator.
 
-**Buiding requerements:** 
+**Buiding requeriments:** 
  - go v.1.13 and higher
 
 **Buiding:**
@@ -33,7 +33,7 @@ Help message:
                 token files in Sim_ConfDir and the syncronization directory in Sim_SyncDir.
                 Environment variables Sim_ConfDir and Sim_SyncDir should be set in advance, 
                 otherways the default paths will be used.
-                Setup process doesn't requere any input in the terminal.
+                Setup process doesn't require any input in the terminal.
     Simulator commands:
         daemon	start as a daemon (Don't use it !!!)
     Environment variables:
