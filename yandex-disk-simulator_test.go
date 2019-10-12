@@ -528,7 +528,8 @@ func Example64StatusAfter1stEvent() {
 
 // try to get status in empty enviroment
 // it starts to fail on CircleCI - env is not installed in the image
-// func Example80StatusInEnv() {
+// need some alternative solution to perform this test
+//func Example80StatusInEnv() {
 // 	exe, _ := exec.LookPath(exe)
 // 	cmd := exec.Command("env", "-i", exe, "status")
 // 	cmd.Stdout = os.Stdout
