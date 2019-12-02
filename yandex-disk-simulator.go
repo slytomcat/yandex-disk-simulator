@@ -44,9 +44,9 @@ Commands:
 	sync	begin the synchronization events simulation
 	help	output this help message and exit
 	version	output version information and exit
-	setup	prepares the simulation environment. It creates the configuration and 
+	setup	prepares the simulation environment. It creates the configuration and
 		token files in Sim_ConfDir and the synchronization directory in Sim_SyncDir.
-		Environment variables Sim_ConfDir and Sim_SyncDir should be set in advance, 
+		Environment variables Sim_ConfDir and Sim_SyncDir should be set in advance,
 		other ways the default paths will be used.
 		Setup process doesn't require any input in the terminal.
 Simulator commands:
@@ -59,8 +59,8 @@ Environment variables (used in setup):
 )
 
 // notExists returns true when specified file or path is not exists
-func notExists(path string) bool {
-	if _, err := os.Stat(path); err != nil {
+func notExists(somePath string) bool {
+	if _, err := os.Stat(somePath); err != nil {
 		return !errors.Is(err, os.ErrExist)
 	}
 	return false
