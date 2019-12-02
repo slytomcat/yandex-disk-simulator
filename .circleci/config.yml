@@ -2,29 +2,32 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.13
+      - image: 'circleci/golang:1.13'
     steps:
       - checkout
       - run:
-          name: build for amd64
+          name: Build for amd64
           command: |
             go build .
             mv yandex-disk-simulator yandex-disk-simulator-linux-amd64
       - run:
-          name: build for 386
+          name: Build for 386
           command: |
             export GOARCH=386
             go build .
             mv yandex-disk-simulator yandex-disk-simulator-linux-386
+      - run:
+          name: Store version
+          command: git describe --tags > VERSION
       - persist_to_workspace:
-            root: .
-            paths:
-              - ./yandex-disk-simulator-linux-amd64
-              - ./yandex-disk-simulator-linux-386
-
+          root: .
+          paths:
+            - ./yandex-disk-simulator-linux-amd64
+            - ./yandex-disk-simulator-linux-386
+            - ./VERSION
   test:
     docker:
-      - image: circleci/golang:1.13
+      - image: 'circleci/golang:1.13'
     steps:
       - checkout
       - run:
@@ -33,41 +36,43 @@ jobs:
             go get -u github.com/jstemmer/go-junit-report;
             mkdir results;
       - run:
-          name: Tests 
-          command: go test -v -race -coverprofile cover.out 2>&1 | tee /dev/tty | go-junit-report > results/results.xml
-      - run: 
+          name: Tests
+          command: |
+            go test -v -race -coverprofile cover.out 2>&1 | tee /dev/tty |
+            go-junit-report > results/results.xml
+      - run:
           name: Report coverage to deepsource.io
           command: |
             curl https://deepsource.io/cli | sh
             ./bin/deepsource report --analyzer test-coverage --key go --value-file ./cover.out
-      - run: 
+      - run:
           name: Format coverage
           command: go tool cover -html=cover.out -o coverage.html
       - store_artifacts:
           path: coverage.html
       - store_test_results:
           path: results
-
-
   upload:
     docker:
-      - image: circleci/golang:1.13
+      - image: 'cibuilds/github:0.10'
     steps:
-      - checkout
       - attach_workspace:
-          at: /tmp/workspace
+          at: ./artifacts
       - run:
-          name: upload_release
-          command: .circleci/upload_release.sh
+          name: Publish Release on GitHub
+          command: |
+            cd ./artifacts
+            ls -l
+            VERSION=$(cat VERSION)
+            echo $VERSION
+            ghr -t ${GHAPITOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./
 
 workflows:
   version: 2
-  build_and_test:
+  build_test_upload:
     jobs:
       - build
-      - test:
-          requires:
-            - build
+      - test
       - upload:
           requires:
-            - test
+            - build
