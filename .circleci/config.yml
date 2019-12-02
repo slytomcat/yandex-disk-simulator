@@ -53,6 +53,7 @@ jobs:
     docker:
       - image: circleci/golang:1.13
     steps:
+      - checkout
       - attach_workspace:
           at: /tmp/workspace
       - run:
