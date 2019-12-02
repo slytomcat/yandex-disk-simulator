@@ -64,7 +64,7 @@ jobs:
             cd ./artifacts
             ls -l
             VERSION=$(cat VERSION)
-            echo $VERSION
+            rm VERSION
             ghr -t ${GHAPITOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./
 
 workflows:
@@ -76,3 +76,6 @@ workflows:
       - upload:
           requires:
             - build
+          filters:
+            tags:
+              only: /^v\.\d+\.\d+\.\d+$/
