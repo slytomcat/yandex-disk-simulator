@@ -57,11 +57,11 @@ jobs:
       - run:
           name: Publish Release on GitHub
           command: |
-            ls ./artifacts
-            ./artifacts/yandex-disk-simulator-linux-amd64 version
-            ./artifacts/yandex-disk-simulator-linux-386 version
+            cd ./artifacts
+            ./yandex-disk-simulator-linux-amd64 version
+            ./yandex-disk-simulator-linux-386 version
             VERSION=$(./artifacts/yandex-disk-simulator-linux-amd64 version)
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./
 
 workflows:
   version: 2
