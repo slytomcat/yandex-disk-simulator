@@ -9,7 +9,6 @@ jobs:
           name: Build for amd64
           command: |
             go build .
-            ./yandex-disk-simulator version > VERSION
             mv yandex-disk-simulator yandex-disk-simulator-linux-amd64
       - run:
           name: Build for 386
@@ -17,6 +16,9 @@ jobs:
             export GOARCH=386
             go build .
             mv yandex-disk-simulator yandex-disk-simulator-linux-386
+      - run:
+          name: Store version
+          command: git describe --tags > VERSION
       - persist_to_workspace:
           root: .
           paths:
@@ -71,8 +73,6 @@ workflows:
     jobs:
       - build
       - test:
-          requires:
-            - build
       - upload:
           requires:
-            - test
+            - build
