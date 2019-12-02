@@ -20,7 +20,7 @@ export OWNER=$CIRCLE_PROJECT_USERNAME
 export REPO=$CIRCLE_PROJECT_REPONAME
 
 echo "Uploading amd64"
-./upload-github-release-asset.sh github_api_token=$GHAPITOKEN owner=$OWNER repo=$REPO tag="$TAG" filename=yandex-disk-simulator-linux-amd64
+./upload-github-release-asset.sh github_api_token=$GHAPITOKEN owner=$OWNER repo=$REPO tag="$TAG" filename=/tmp/workspace/yandex-disk-simulator-linux-amd64
 
 echo "Uploading 386"
 ./upload-github-release-asset.sh github_api_token=$GHAPITOKEN owner=$OWNER repo=$REPO tag="$TAG" filename=yandex-disk-simulator-linux-386

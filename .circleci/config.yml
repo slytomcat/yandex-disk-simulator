@@ -54,7 +54,7 @@ jobs:
       - image: circleci/golang:1.13
     steps:
       - attach_workspace:
-          at: .
+          at: /tmp/workspace
       - run:
           name: upload_release
           command: .circleci/upload_release.sh
