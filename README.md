@@ -9,7 +9,7 @@ You can get compiled binaries (ELF) for linux/amd64 and linux/386 platforms from
 
 There is no additional libraries requirements to run the simulator.
 
-**Buiding requerements:** 
+**Building requirements:** 
  - go v.1.13 and higher
 
 **Buiding:**
