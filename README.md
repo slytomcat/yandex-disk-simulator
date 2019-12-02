@@ -22,21 +22,22 @@ There is no additional libraries requirements to run the simulator.
 Help message:
 
     Usage:
-        yandex-disk-similator <cmd>
+        yandex-disk-simulator <cmd>
     Commands:
-        start	starts the daemon and begin starting events simulation
-        stop	stops the daemon
-        status	get the daemon status
-        sync	begin the synchronisation events simulation
-        help    show this help message
-        setup   prepares the simulation environment. It creates the cofiguration and 
-                token files in Sim_ConfDir and the syncronization directory in Sim_SyncDir.
+        start   starts the daemon and begin starting events simulation
+        stop    stops the daemon
+        status  get the daemon status
+        sync    begin the synchronization events simulation
+        help    output this help message and exit
+        version output version information and exit
+        setup   prepares the simulation environment. It creates the configuration and 
+                token files in Sim_ConfDir and the synchronization directory in Sim_SyncDir.
                 Environment variables Sim_ConfDir and Sim_SyncDir should be set in advance, 
-                otherways the default paths will be used.
+                other ways the default paths will be used.
                 Setup process doesn't require any input in the terminal.
     Simulator commands:
         daemon	start as a daemon (Don't use it !!!)
-    Environment variables:
+    Environment variables (used in setup):
         Sim_SyncDir	can be used to set synchronized directory path (default: ~/Yandex.Disk)
         Sim_ConfDir	can be used to set configuration directory path (default: ~/.config/yandex-disk)
 
