@@ -64,11 +64,6 @@ jobs:
             VERSION=$(cat VERSION)
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./
 
-total 6068
--rwxr-xr-x    1 root     root       2888084 Dec  2 17:15 yandex-disk-simulator-linux-386
--rwxr-xr-x    1 root     root       3321371 Dec  2 17:15 yandex-disk-simulator-linux-amd64
-/bin/bash: line 2: ./yandex-disk-simulator-linux-amd64: No such file or directory
-
 workflows:
   version: 2
   build_test_upload:
