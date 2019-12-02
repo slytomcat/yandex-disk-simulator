@@ -9,6 +9,7 @@ jobs:
           name: Build for amd64
           command: |
             go build .
+            ./yandex-disk-simulator version > VERSION
             mv yandex-disk-simulator yandex-disk-simulator-linux-amd64
       - run:
           name: Build for 386
@@ -21,6 +22,7 @@ jobs:
           paths:
             - ./yandex-disk-simulator-linux-amd64
             - ./yandex-disk-simulator-linux-386
+            - ./VERSION
   test:
     docker:
       - image: 'circleci/golang:1.13'
@@ -59,10 +61,13 @@ jobs:
           command: |
             cd ./artifacts
             ls -l
-            ./yandex-disk-simulator-linux-amd64 version
-            ./yandex-disk-simulator-linux-386 version
-            VERSION=$(./yandex-disk-simulator-linux-amd64 version)
+            VERSION=$(cat VERSION)
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./
+
+total 6068
+-rwxr-xr-x    1 root     root       2888084 Dec  2 17:15 yandex-disk-simulator-linux-386
+-rwxr-xr-x    1 root     root       3321371 Dec  2 17:15 yandex-disk-simulator-linux-amd64
+/bin/bash: line 2: ./yandex-disk-simulator-linux-amd64: No such file or directory
 
 workflows:
   version: 2
