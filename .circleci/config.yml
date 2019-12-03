@@ -73,7 +73,7 @@ workflows:
   version: 2
   build_test_upload:
     jobs:
-      - build:
+      - build
       - test
       - upload:
           requires:
