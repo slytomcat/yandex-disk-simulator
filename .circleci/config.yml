@@ -1,8 +1,8 @@
-version: 2
+version: 2.1
 jobs:
   build:
     docker:
-      - image: 'circleci/golang:1.13'
+      - image: 'circleci/golang:1.14'
     steps:
       - checkout
       - run:
@@ -27,7 +27,7 @@ jobs:
             - ./VERSION
   test:
     docker:
-      - image: 'circleci/golang:1.13'
+      - image: 'circleci/golang:1.14'
     steps:
       - checkout
       - run:
@@ -62,13 +62,13 @@ jobs:
           name: Publish Release on GitHub
           command: |
             cd ./artifacts
-            ls -l
-            VERSION=$(cat VERSION)
-            echo $VERSION
-            ghr -t ${GHAPITOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./
+            TAG=$(cat VERSION)
+            rm VERSION
+            echo "TAG: $TAG"
+            ghr -t ${GHAPITOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${TAG} ./
 
 workflows:
-  version: 2
+  version: 2.1
   build_test_upload:
     jobs:
       - build
@@ -76,3 +76,6 @@ workflows:
       - upload:
           requires:
             - build
+          filters:
+            branches:
+              only: master
