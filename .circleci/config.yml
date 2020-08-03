@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 jobs:
   build:
     docker:
@@ -62,14 +62,13 @@ jobs:
           name: Publish Release on GitHub
           command: |
             cd ./artifacts
-            VERSION=$(cat VERSION)
-            echo "TAG: $VERSION"
-            [[ $VERSION =~  ^v\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 0
+            TAG=$(cat VERSION)
             rm VERSION
-            ghr -t ${GHAPITOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./
+            echo "TAG: $TAG"
+            ghr -t ${GHAPITOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${TAG} ./
 
 workflows:
-  version: 2
+  version: 2.1
   build_test_upload:
     jobs:
       - build
@@ -77,3 +76,6 @@ workflows:
       - upload:
           requires:
             - build
+          filters:
+            branches:
+              only: master
