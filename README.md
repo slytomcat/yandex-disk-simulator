@@ -57,4 +57,4 @@ If *Sim_SyncDir* and *Sim_ConfDir* are not set then *"$HOME/Yandex.Disk"* is use
 
 **GOOD IDEA**
 
-To use it as yandex-disk simulator consider renaming the *yandex-disk-similator* to *yandex-disk* and put it in the PATH before the original yandex-disk (if it is installed).
+To use it as yandex-disk simulator consider renaming the *yandex-disk-similator* to *yandex-disk* and put it in the PATH before the original yandex-disk utility (if it is installed).
