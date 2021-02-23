@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -76,7 +76,7 @@ func testCmdWithCapture(cmd string, t *testing.T) string {
 	os.Stdout = w
 	err := doMain(exe, cmd)
 	w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stdout = stdOut
 	if err != nil {
 		t.Errorf("error while executing command '%s %s': %s", exe, cmd, err)
@@ -93,7 +93,7 @@ func TestDoMain01Help(t *testing.T) {
 	os.Args = []string{exe, "help"}
 	main()
 	w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stdout = stdOut
 	os.Args = args
 	if string(out) != fmt.Sprintf(helpMsg, exe, version) {
@@ -161,7 +161,7 @@ func TestDoMain08FailWrongDaemonStart(t *testing.T) {
 	err := doMain("wrong-simulator", "start")
 	w.Close()
 	os.Stdout = stdOut
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	res := string(out)
 	if err == nil {
 		t.Error("No error with starting of incorrect daemon")
