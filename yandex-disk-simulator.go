@@ -17,6 +17,7 @@ package main
 
 import (
 	"bufio"
+	_ "embed"
 	"errors"
 	"fmt"
 	"io"
@@ -30,10 +31,12 @@ import (
 	"time"
 )
 
+//go:embed VERSION
+var version string
+
 var (
 	daemonLogFile = path.Join(os.TempDir(), "yandexdisksimulator.log")
 	socketPath    = path.Join(os.TempDir(), "yandexdisksimulator.socket")
-	version, _    = exec.Command("git", "describe", "--tags").Output()
 	verMsg        = "%s\n    version: %s/n"
 	helpMsg       = `Usage:
 	%s <cmd>
