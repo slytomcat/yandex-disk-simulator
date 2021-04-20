@@ -53,6 +53,14 @@ var (
 				time.Duration(500) * time.Millisecond,
 				"Error simulation 1"},
 		},
+		"Stop": {
+			{" ",
+				time.Duration(100) * time.Millisecond,
+				""},
+			{" ",
+				time.Duration(10) * time.Millisecond,
+				"stopped"},
+		},
 	}
 )
 

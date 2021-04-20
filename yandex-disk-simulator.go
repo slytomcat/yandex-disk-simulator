@@ -257,6 +257,7 @@ func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, erro
 		sim.Simulate("Error")
 		_, err = conn.Write([]byte{0})
 	case "stop": // stop the daemon
+		sim.Simulate("Stop")
 		// send back nothing to show that daemon is not active any more
 		return true, nil // stop accepting of incoming connections
 	default:
