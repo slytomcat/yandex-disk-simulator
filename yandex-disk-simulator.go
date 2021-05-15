@@ -17,6 +17,7 @@ package main
 
 import (
 	"bufio"
+	_ "embed"
 	"errors"
 	"fmt"
 	"io"
@@ -30,10 +31,12 @@ import (
 	"time"
 )
 
+//go:embed VERSION
+var version string
+
 var (
 	daemonLogFile = path.Join(os.TempDir(), "yandexdisksimulator.log")
 	socketPath    = path.Join(os.TempDir(), "yandexdisksimulator.socket")
-	version, _    = exec.Command("git", "describe", "--tags").Output()
 	verMsg        = "%s\n    version: %s/n"
 	helpMsg       = `Usage:
 	%s <cmd>
@@ -208,6 +211,8 @@ func daemon(syncDir string) error {
 
 		// exit from loop in case of 'stop' command
 		if exit {
+			sim.Simulate("Stop")
+			time.Sleep(time.Duration(stopTime) * time.Millisecond)
 			break
 		}
 	}
@@ -217,7 +222,7 @@ func daemon(syncDir string) error {
 // handleErr formats error, writes it into simulator log and returns formatted error
 func handleErr(format string, params ...interface{}) error {
 	err := fmt.Errorf(format, params...)
-	log.Printf("%v", err)
+	log.Println(err) // skipcq: GO-S0904
 	return err
 }
 
@@ -234,7 +239,7 @@ func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, erro
 		return true, fmt.Errorf("connection reading error: %w", err)
 	}
 	cmd := string(buf[0:nr])
-	log.Println("Received:", cmd)
+	log.Println("Received:", cmd) // skipcq: GO-S0904
 	// check the synchronization path existence and return error in case of absence of it
 	if notExists(syncDir) && cmd != "stop" {
 		if _, err = conn.Write([]byte("Error: Indicated directory does not exist")); err != nil {
@@ -314,7 +319,7 @@ func checkCfg() (string, error) {
 		confDir = "$HOME/.config/yandex-disk"
 	}
 	confFile := path.Join(os.ExpandEnv(confDir), "config.cfg")
-	log.Println("Config file: ", confFile)
+	log.Println("Config file: ", confFile) // skipcq: GO-S0904
 	// read data from configuration file
 	f, err := os.Open(confFile)
 	if err != nil {
