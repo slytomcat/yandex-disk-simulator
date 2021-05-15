@@ -191,8 +191,10 @@ func TestDoMain11StartSecondary(t *testing.T) {
 func TestDoMain15StartDaemon(t *testing.T) {
 	// stop already executed daemon
 	exec.Command(exe, "stop").Run()
+	time.Sleep(time.Millisecond * 150)
 	// start daemon in separate gorutine
-	go doMain(exe, "daemon", SyncDirPath)
+	// go doMain(exe, "daemon", SyncDirPath)
+	execCommand("start")
 	time.Sleep(10 * time.Millisecond)
 }
 
@@ -235,7 +237,7 @@ func getStatusAfterEvent(timeout time.Duration) {
 }
 
 // catch 1-st status change after start
-func Example20StatusAfter1stEvent() {
+func Example_t20StatusAfter1stEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Synchronization core status: paused
@@ -256,7 +258,7 @@ func Example20StatusAfter1stEvent() {
 }
 
 // catch 2-nd status change after start
-func Example22StatusAfter2ndEvent() {
+func Example_t22StatusAfter2ndEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Synchronization core status: index
@@ -265,7 +267,7 @@ func Example22StatusAfter2ndEvent() {
 }
 
 // catch 3-rd status change after start
-func Example24StatusAfter3rdEvent() {
+func Example_t24StatusAfter3rdEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Synchronization core status: busy
@@ -286,7 +288,7 @@ func Example24StatusAfter3rdEvent() {
 }
 
 // catch 4-th status change after start
-func Example26StatusAfter4thEvent() {
+func Example_t26StatusAfter4thEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Synchronization core status: index
@@ -307,7 +309,7 @@ func Example26StatusAfter4thEvent() {
 }
 
 // catch 5-th status change after start
-func Example28StatusAfter5thEvent() {
+func Example_t28StatusAfter5thEvent() {
 	getStatusAfterEvent(time.Duration(6 * time.Second))
 	// Output:
 	// Synchronization core status: idle
@@ -332,7 +334,7 @@ func Example28StatusAfter5thEvent() {
 }
 
 // call the 'sync' command
-func Example40Sync() {
+func Example_t40Sync() {
 	// call it
 	execCommand("sync")
 	// Output:
@@ -340,7 +342,7 @@ func Example40Sync() {
 }
 
 // catch status after synchronisation start
-func Example42StatusAfterSyncStart() {
+func Example_t42StatusAfterSyncStart() {
 	execCommand("status")
 	// Output:
 	// Synchronization core status: index
@@ -365,7 +367,7 @@ func Example42StatusAfterSyncStart() {
 }
 
 // catch 2-nd status change after start of synchronisation
-func Example44StatusAfter2ndEvent() {
+func Example_t44StatusAfter2ndEvent() {
 	getStatusAfterEvent(time.Duration(2 * time.Second))
 	// Output:
 	// Sync progress: 0 MB/ 139.38 MB (0 %)
@@ -391,7 +393,7 @@ func Example44StatusAfter2ndEvent() {
 }
 
 // catch 3-rd status change after start of synchronisation
-func Example46StatusAfter3rdEvent() {
+func Example_t46StatusAfter3rdEvent() {
 	getStatusAfterEvent(time.Duration(1 * time.Second))
 	// Output:
 	// Sync progress: 65.34 MB/ 139.38 MB (46 %)
@@ -417,7 +419,7 @@ func Example46StatusAfter3rdEvent() {
 }
 
 // catch 4-th status change after start of synchronisation
-func Example48StatusAfter4thEvent() {
+func Example_t48StatusAfter4thEvent() {
 	getStatusAfterEvent(time.Duration(3 * time.Second))
 	// Output:
 	// Sync progress: 139.38 MB/ 139.38 MB (100 %)
@@ -443,7 +445,7 @@ func Example48StatusAfter4thEvent() {
 }
 
 // catch 5-th status change after start of synchronisation
-func Example50StatusAfter5thEvent() {
+func Example_t50StatusAfter5thEvent() {
 	getStatusAfterEvent(time.Duration(1 * time.Second))
 	// Output:
 	// Synchronization core status: idle
@@ -468,14 +470,14 @@ func Example50StatusAfter5thEvent() {
 }
 
 // start error simulation
-func Example60Error() {
+func Example_t60Error() {
 	execCommand("error")
 	// Output:
 	//
 }
 
 // catch status change right after start of error synchronisation
-func Example62StatusAfterError() {
+func Example_t62StatusAfterError() {
 	execCommand("status")
 	// Output:
 	// Synchronization core status: error
@@ -502,7 +504,7 @@ func Example62StatusAfterError() {
 }
 
 // catch 2-nd status change after start of error synchronisation
-func Example64StatusAfter1stEvent() {
+func Example_t64StatusAfter1stEvent() {
 	getStatusAfterEvent(time.Duration(1 * time.Second))
 	// Output:
 	// Synchronization core status: idle
@@ -558,7 +560,7 @@ func Example64StatusAfter1stEvent() {
 // }
 
 // try to get status with removed sinc path
-func Example90CommandWithoutDir() {
+func Example_t90CommandWithoutDir() {
 	os.RemoveAll(SyncDirPath)
 	execCommand("status")
 	// Output:
@@ -566,14 +568,15 @@ func Example90CommandWithoutDir() {
 }
 
 // try to stop daemon
-func Example95Stop() {
+func Example_t95Stop() {
 	execCommand("stop")
+	time.Sleep(time.Millisecond * 150)
 	// Output:
 	// Daemon stopped.
 }
 
 // try to stop daemon again
-func Example97SecondaryStop() {
+func Example_t97SecondaryStop() {
 	execCommand("stop")
 	// Output:
 	// Error: daemon not started
