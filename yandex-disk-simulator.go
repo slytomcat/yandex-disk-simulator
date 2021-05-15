@@ -222,7 +222,7 @@ func daemon(syncDir string) error {
 // handleErr formats error, writes it into simulator log and returns formatted error
 func handleErr(format string, params ...interface{}) error {
 	err := fmt.Errorf(format, params...)
-	log.Printf("%v", err)
+	log.Println(err) // skipcq: GO-S0904
 	return err
 }
 
