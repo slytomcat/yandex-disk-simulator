@@ -193,8 +193,7 @@ func TestDoMain15StartDaemon(t *testing.T) {
 	exec.Command(exe, "stop").Run()
 	time.Sleep(time.Millisecond * 150)
 	// start daemon in separate gorutine
-	// go doMain(exe, "daemon", SyncDirPath)
-	execCommand("start")
+	go doMain(exe, "daemon", SyncDirPath)
 	time.Sleep(10 * time.Millisecond)
 }
 
