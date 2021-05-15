@@ -239,7 +239,7 @@ func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, erro
 		return true, fmt.Errorf("connection reading error: %w", err)
 	}
 	cmd := string(buf[0:nr])
-	log.Println("Received:", cmd)
+	log.Println("Received:", cmd) // skipcq: GO-S0904
 	// check the synchronization path existence and return error in case of absence of it
 	if notExists(syncDir) && cmd != "stop" {
 		if _, err = conn.Write([]byte("Error: Indicated directory does not exist")); err != nil {
@@ -319,7 +319,7 @@ func checkCfg() (string, error) {
 		confDir = "$HOME/.config/yandex-disk"
 	}
 	confFile := path.Join(os.ExpandEnv(confDir), "config.cfg")
-	log.Println("Config file: ", confFile)
+	log.Println("Config file: ", confFile) // skipcq: GO-S0904
 	// read data from configuration file
 	f, err := os.Open(confFile)
 	if err != nil {
