@@ -123,7 +123,7 @@ func doMain(args ...string) error {
 	}
 }
 
-// daemonize strts the second instance of utility as a daemon process
+// daemonize starts the second instance of utility as a daemon process
 func daemonize(exe string) error {
 
 	// check configuration and get sync dir
