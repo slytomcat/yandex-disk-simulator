@@ -1,13 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
@@ -445,37 +443,6 @@ Last synchronized items:
 	file: 'w'
 	file: 'n'`+"\n\n\n",
 			getStatusAfterEvent(t, 2*time.Second))
-	})
-
-	t.Run("status in empty environmen", func(t *testing.T) {
-		exe, _ := exec.LookPath(exe)
-		cmd := exec.Command("env", "-i", exe, "status")
-		bufer := &bytes.Buffer{}
-		cmd.Stdout = bufer
-		cmd.Stderr = bufer
-		cmd.Run()
-		res := bufer.String()
-		assert.Equal(t,
-			`Synchronization core status: idle
-Path to Yandex.Disk directory: '/home/stc/Yandex.Disk'
-	Total: 43.50 GB
-	Used: 2.89 GB
-	Available: 40.61 GB
-	Max file size: 50 GB
-	Trash size: 0 B
-
-Last synchronized items:
-	file: 'File.ods'
-	file: 'downloads/file.deb'
-	file: 'downloads/setup'
-	file: 'download'
-	file: 'down'
-	file: 'do'
-	file: 'd'
-	file: 'o'
-	file: 'w'
-	file: 'n'`+"\n\n\n",
-			res)
 	})
 
 	t.Run("status with removed sinc path", func(t *testing.T) {
