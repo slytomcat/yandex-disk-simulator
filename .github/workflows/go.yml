@@ -24,7 +24,7 @@ jobs:
             /home/runner/go/pkg/mod/
           key: GO_MOD_CACHE
       - name: Test
-        run: go test -v --race -coverprofile cover.out ./... 
+        run: go test -v --race -coverprofile cover.out ./...
       - name: Format coverage
         run: go tool cover -html=cover.out -o coverage.html
       - name: Upload coverage to Artifacts
@@ -33,8 +33,11 @@ jobs:
           name: coverage_artifacts
           path: coverage.html
       - name: Report coverage to deepsource.io
-        run: |
+        env:
+          DEEPSOURCE_DSN: https://sampledsn@deepsource.io
+        run: >
           curl https://deepsource.io/cli | sh
+
           ./bin/deepsource report --analyzer test-coverage --key go --value-file ./cover.out
   build:
     needs: test
@@ -88,4 +91,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          asset_paths: '["./build_artifacts/yandex-disk-simulator-linux*"]'  
+          asset_paths: '["./build_artifacts/yandex-disk-simulator-linux*"]'
