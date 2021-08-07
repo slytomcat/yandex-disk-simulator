@@ -1,0 +1,92 @@
+name: Go
+on:
+  push:
+    branches:
+      - master
+      - dev
+  pull_request:
+    branches:
+      - master
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - name: Cache
+        uses: actions/cache@v2.1.6
+        with:
+          path: |
+            /home/runner/.cache/go-build/
+            /home/runner/go/pkg/mod/
+          key: GO_MOD_CACHE
+      - name: Test
+        run: go test -v --race -coverprofile cover.out ./...
+      - name: Format coverage
+        run: go tool cover -html=cover.out -o coverage.html
+      - name: Upload coverage to Artifacts
+        uses: actions/upload-artifact@v2.2.2
+        with:
+          name: coverage_artifacts
+          path: coverage.html
+      - name: Report coverage to deepsource.io
+        env:
+          DEEPSOURCE_DSN: https://sampledsn@deepsource.io
+        run: >
+          curl https://deepsource.io/cli | sh
+
+          ./bin/deepsource report --analyzer test-coverage --key go --value-file ./cover.out
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get version
+        run: cat VERSION
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - name: Cache
+        uses: actions/cache@v2.1.6
+        with:
+          path: |
+            /home/runner/.cache/go-build/
+            /home/runner/go/pkg/mod/
+          key: GO_MOD_CACHE
+      - name: Build amd64
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v ./...
+          mv yandex-disk-simulator yandex-disk-simulator-linux-amd64
+      - name: Build amd64
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -v ./...
+          mv yandex-disk-simulator yandex-disk-simulator-linux-386
+      - name: Upload a Build Artifacts
+        uses: actions/upload-artifact@v2.2.2
+        with:
+          name: build_artifacts
+          path: |
+            yandex-disk-simulator-linux-amd64
+            yandex-disk-simulator-linux-386
+            VERSION
+  push:
+    needs: build
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2.0.8
+        with:
+          name: build_artifacts
+      - name: Version
+        run: cat VERSION
+      - name: Upload to release assets
+        uses: alexellis/upload-assets@0.2.2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          asset_paths: '["./build_artifacts/yandex-disk-simulator-linux*"]'
