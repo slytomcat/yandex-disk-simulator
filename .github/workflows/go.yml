@@ -85,8 +85,9 @@ jobs:
       - name: Version
         run: cat VERSION
       - name: Upload to release assets
-        uses: alexellis/upload-assets@0.2.2
+        uses: xresloader/upload-to-github-release@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          asset_paths: '["./yandex-disk-simulator-linux*"]'
+          update_latest_release: true
+          file: yandex-disk-simulator-linux*
