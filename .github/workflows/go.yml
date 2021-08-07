@@ -91,3 +91,4 @@ jobs:
         with:
           update_latest_release: true
           file: yandex-disk-simulator-linux*
+          overwrite: true
