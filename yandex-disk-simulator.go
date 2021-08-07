@@ -196,7 +196,8 @@ func daemon(syncDir string) error {
 	sim.Simulate("Start")
 
 	// main daemon loop
-	for {
+	var exit bool
+	for !exit {
 		// accept connection to socket
 		conn, err := ln.Accept()
 		if err != nil {
@@ -204,16 +205,9 @@ func daemon(syncDir string) error {
 		}
 
 		// handle received connection
-		exit, err := handleConnection(conn, sim, syncDir)
+		exit, err = handleConnection(conn, sim, syncDir)
 		if err != nil {
 			return handleErr("connection handling error: %w", err)
-		}
-
-		// exit from loop in case of 'stop' command
-		if exit {
-			sim.Simulate("Stop")
-			time.Sleep(time.Duration(stopTime) * time.Millisecond)
-			break
 		}
 	}
 	return nil
@@ -260,6 +254,9 @@ func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, erro
 		_, err = conn.Write([]byte{0})
 	case "stop": // stop the daemon
 		// send back nothing to show that daemon is not active any more
+		// simulate normal exit
+		sim.Simulate("Stop")
+		time.Sleep(time.Duration(stopTime) * time.Millisecond)
 		return true, nil // stop accepting of incoming connections
 	default:
 		// unexpected command
