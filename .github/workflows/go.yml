@@ -89,4 +89,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          asset_paths: '["./build_artifacts/yandex-disk-simulator-linux*"]'
+          asset_paths: '["yandex-disk-simulator-linux*"]'
