@@ -1,8 +1,6 @@
 # yandex-disk-simulator
 [![CircleCI](https://circleci.com/gh/slytomcat/yandex-disk-simulator.svg?style=svg)](https://circleci.com/gh/slytomcat/yandex-disk-simulator)
 
-[![DeepSource](https://static.deepsource.io/deepsource-badge-light.svg)](https://deepsource.io/gh/slytomcat/yandex-disk-simulator/?ref=repository-badge)
-
 **yandex-disk-simulator** is a *yandex-disk* utility simulator for integration tests (Linux).
 
 You can get compiled binaries (ELF) for linux/amd64 and linux/386 platforms from [last release](https://github.com/slytomcat/yandex-disk-simulator/releases/latest) or bild it yourself.
