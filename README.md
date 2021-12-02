@@ -1,5 +1,5 @@
 # yandex-disk-simulator
-[![CircleCI](https://circleci.com/gh/slytomcat/yandex-disk-simulator.svg?style=svg)](https://circleci.com/gh/slytomcat/yandex-disk-simulator)
+[![Go](https://github.com/slytomcat/yandex-disk-simulator/actions/workflows/go.yml/badge.svg)](https://github.com/slytomcat/yandex-disk-simulator/actions/workflows/go.yml)
 
 **yandex-disk-simulator** is a *yandex-disk* utility simulator for integration tests (Linux).
 
