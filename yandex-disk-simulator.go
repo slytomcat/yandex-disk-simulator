@@ -45,6 +45,7 @@ Commands:
 	stop	stops the daemon
 	status	get the daemon status
 	sync	begin the synchronization events simulation
+	error   berin short time error symulatin
 	help	output this help message and exit
 	version	output version information and exit
 	setup	prepares the simulation environment. It creates the configuration and
@@ -119,7 +120,7 @@ func doMain(args ...string) error {
 		fmt.Printf(verMsg, exe, version)
 		return nil
 	default:
-		return fmt.Errorf("Error: unknown command: '%s'", cmd) // Original product error. skipcq: SCC-ST1005
+		return fmt.Errorf("%s '%s'", "Error: unknown command:", cmd) // Original product error.
 	}
 }
 
@@ -216,7 +217,7 @@ func daemon(syncDir string) error {
 // handleErr formats error, writes it into simulator log and returns formatted error
 func handleErr(format string, params ...interface{}) error {
 	err := fmt.Errorf(format, params...)
-	log.Println(err) // skipcq: GO-S0904
+	log.Println(err)
 	return err
 }
 
@@ -233,7 +234,7 @@ func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, erro
 		return true, fmt.Errorf("connection reading error: %w", err)
 	}
 	cmd := string(buf[0:nr])
-	log.Println("Received:", cmd) // skipcq: GO-S0904
+	log.Println("Received:", cmd)
 	// check the synchronization path existence and return error in case of absence of it
 	if notExists(syncDir) && cmd != "stop" {
 		if _, err = conn.Write([]byte("Error: Indicated directory does not exist")); err != nil {
@@ -272,7 +273,7 @@ func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, erro
 // send command to daemon and handle the responce from it
 func handleCommand(cmd string) error {
 	if notExists(socketPath) {
-		return errors.New("Error: daemon not started") // Original product error. skipcq: SCC-ST1005
+		return fmt.Errorf("%s", "Error: daemon not started")
 	}
 	// open socket as client
 	conn, err := net.DialTimeout("unix", socketPath, time.Duration(time.Second))
@@ -316,11 +317,11 @@ func checkCfg() (string, error) {
 		confDir = "$HOME/.config/yandex-disk"
 	}
 	confFile := path.Join(os.ExpandEnv(confDir), "config.cfg")
-	log.Println("Config file: ", confFile) // skipcq: GO-S0904
+	log.Println("Config file: ", confFile)
 	// read data from configuration file
 	f, err := os.Open(confFile)
 	if err != nil {
-		return "", errors.New("Error: option 'dir' is missing") // Original product error. skipcq: SCC-ST1005
+		return "", fmt.Errorf("%s", "Error: option 'dir' is missing")
 	}
 	defer f.Close()
 	reader := bufio.NewReader(f)
@@ -345,11 +346,11 @@ func checkCfg() (string, error) {
 	}
 	// return error if value of DIR is empty or specified path is not exists
 	if notExists(dir) {
-		return "", errors.New("Error: option 'dir' is missing") // Original product error. skipcq: SCC-ST1005
+		return "", fmt.Errorf("%s", "Error: option 'dir' is missing") // Original product error.
 	}
 	// return error if value of AUTH is empty or specified path is not exists
 	if notExists(auth) {
-		return "", errors.New("Error: file with OAuth token hasn't been found.\nUse 'token' command to authenticate and create this file") // Original product error. skipcq: SCC-ST1005
+		return "", fmt.Errorf("%s", "Error: file with OAuth token hasn't been found.\nUse 'token' command to authenticate and create this file") // Original product error.
 	}
 	return dir, nil
 }

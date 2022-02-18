@@ -63,7 +63,7 @@ jobs:
         run: |
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v ./...
           mv yandex-disk-simulator yandex-disk-simulator-linux-amd64
-      - name: Build amd64
+      - name: Build 386
         run: |
           CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -v ./...
           mv yandex-disk-simulator yandex-disk-simulator-linux-386
