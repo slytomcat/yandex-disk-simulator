@@ -87,7 +87,7 @@ func TestDoMain00NoCommand(t *testing.T) {
 	err := doMain(exe)
 	assert.Error(t, err, "no error for no command")
 	assert.Equal(t,
-		errors.New("Error: command hasn't been specified. Use the --help command to access help\nor setup to launch the setup wizard."),
+		fmt.Errorf("%s", "Error: command hasn't been specified. Use the --help command to access help\nor setup to launch the setup wizard."),
 		err,
 		"incorrect message: "+err.Error())
 }
