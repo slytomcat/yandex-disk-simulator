@@ -78,7 +78,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          update_latest_release: true
           file: yandex-disk-simulator-linux*
+          verbose: true
           overwrite: true
           draft: false
