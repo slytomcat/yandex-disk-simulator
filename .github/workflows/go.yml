@@ -32,22 +32,11 @@ jobs:
         with:
           name: coverage_artifacts
           path: coverage.html
-      - name: Report coverage to deepsource.io
-        env:
-          DEEPSOURCE_DSN: https://sampledsn@deepsource.io
-        run: >
-          curl https://deepsource.io/cli | sh
-
-          ./bin/deepsource report --analyzer test-coverage --key go --value-file ./cover.out
   build:
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Get version
-        run: |
-          git fetch --prune --unshallow --tags
-          git describe --tag > VERSION
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
@@ -61,11 +50,11 @@ jobs:
           key: GO_MOD_CACHE
       - name: Build amd64
         run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v ./...
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 ./build.sh
           mv yandex-disk-simulator yandex-disk-simulator-linux-amd64
       - name: Build 386
         run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -v ./...
+          CGO_ENABLED=0 GOOS=linux GOARCH=386 ./build.sh
           mv yandex-disk-simulator yandex-disk-simulator-linux-386
       - name: Upload a Build Artifacts
         uses: actions/upload-artifact@v2.2.2
@@ -84,8 +73,6 @@ jobs:
         uses: actions/download-artifact@v2.0.8
         with:
           name: build_artifacts
-      - name: Version
-        run: cat VERSION
       - name: Upload to release assets
         uses: xresloader/upload-to-github-release@v1
         env:

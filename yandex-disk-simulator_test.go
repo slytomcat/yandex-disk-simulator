@@ -185,7 +185,7 @@ Last synchronized items:
 	file: 'download'
 	file: 'down'
 	file: 'do_it'
-	file: 'very_very_long_long_file_with_unredscore'
+	file: 'very_very_long_long_file_with_underscore'
 	file: 'o'
 	file: 'w'
 	file: 'n'`+"\n\n\n",
@@ -213,7 +213,7 @@ Last synchronized items:
 	file: 'download'
 	file: 'down'
 	file: 'do_it'
-	file: 'very_very_long_long_file_with_unredscore'
+	file: 'very_very_long_long_file_with_underscore'
 	file: 'o'
 	file: 'w'
 	file: 'n'`+"\n\n\n",
@@ -233,7 +233,7 @@ Last synchronized items:
 	file: 'download'
 	file: 'down'
 	file: 'do_it'
-	file: 'very_very_long_long_file_with_unredscore'
+	file: 'very_very_long_long_file_with_underscore'
 	file: 'o'
 	file: 'w'
 	file: 'n'`+"\n\n\n",
@@ -257,7 +257,7 @@ Last synchronized items:
 	file: 'download'
 	file: 'down'
 	file: 'do_it'
-	file: 'very_very_long_long_file_with_unredscore'
+	file: 'very_very_long_long_file_with_underscore'
 	file: 'o'
 	file: 'w'
 	file: 'n'`+"\n\n\n",
@@ -285,7 +285,7 @@ Last synchronized items:
 	file: 'download'
 	file: 'down'
 	file: 'do_it'
-	file: 'very_very_long_long_file_with_unredscore'
+	file: 'very_very_long_long_file_with_underscore'
 	file: 'o'
 	file: 'w'
 	file: 'n'`+"\n\n\n",
@@ -310,7 +310,7 @@ Last synchronized items:
 	file: 'download'
 	file: 'down'
 	file: 'do_it'
-	file: 'very_very_long_long_file_with_unredscore'
+	file: 'very_very_long_long_file_with_underscore'
 	file: 'o'
 	file: 'w'
 	file: 'n'`+"\n\n\n",
@@ -335,7 +335,7 @@ Last synchronized items:
 	file: 'download'
 	file: 'down'
 	file: 'do_it'
-	file: 'very_very_long_long_file_with_unredscore'
+	file: 'very_very_long_long_file_with_underscore'
 	file: 'o'
 	file: 'w'
 	file: 'n'`+"\n\n\n",
@@ -361,7 +361,7 @@ Last synchronized items:
 	file: 'download'
 	file: 'down'
 	file: 'do_it'
-	file: 'very_very_long_long_file_with_unredscore'
+	file: 'very_very_long_long_file_with_underscore'
 	file: 'o'
 	file: 'w'`+"\n\n\n",
 			getStatusAfterEvent(t, 2*time.Second))
@@ -384,7 +384,7 @@ Last synchronized items:
 	file: 'download'
 	file: 'down'
 	file: 'do_it'
-	file: 'very_very_long_long_file_with_unredscore'
+	file: 'very_very_long_long_file_with_underscore'
 	file: 'o'
 	file: 'w'
 	file: 'n'`+"\n\n\n",
@@ -414,7 +414,7 @@ Last synchronized items:
 	file: 'download'
 	file: 'down'
 	file: 'do_it'
-	file: 'very_very_long_long_file_with_unredscore'
+	file: 'very_very_long_long_file_with_underscore'
 	file: 'o'
 	file: 'w'
 	file: 'n'`+"\n\n\n",
@@ -438,7 +438,7 @@ Last synchronized items:
 	file: 'download'
 	file: 'down'
 	file: 'do_it'
-	file: 'very_very_long_long_file_with_unredscore'
+	file: 'very_very_long_long_file_with_underscore'
 	file: 'o'
 	file: 'w'
 	file: 'n'`+"\n\n\n",

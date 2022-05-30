@@ -17,7 +17,6 @@ package main
 
 import (
 	"bufio"
-	_ "embed"
 	"errors"
 	"fmt"
 	"io"
@@ -31,13 +30,12 @@ import (
 	"time"
 )
 
-//go:embed VERSION
 var version string
 
 var (
 	daemonLogFile = path.Join(os.TempDir(), "yandexdisksimulator.log")
 	socketPath    = path.Join(os.TempDir(), "yandexdisksimulator.socket")
-	verMsg        = "%s\n    version: %s/n"
+	verMsg        = "%s\n    version: %s\n"
 	helpMsg       = `Usage:
 	%s <cmd>
 Commands:
@@ -59,7 +57,8 @@ Environment variables (used in setup):
 	Sim_SyncDir	can be used to set synchronized directory path (default: ~/Yandex.Disk)
 	Sim_ConfDir	can be used to set configuration directory path (default: ~/.config/yandex-disk)
 
-	version: %s\n`
+	version: %s
+`
 )
 
 // notExists returns true when specified file or path is not exists
