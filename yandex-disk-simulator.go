@@ -116,7 +116,7 @@ func doMain(args ...string) error {
 		fmt.Printf(helpMsg, exe, version)
 		return nil
 	case "version", "-v":
-		fmt.Printf(verMsg, exe, version)
+		fmt.Printf("%s %s\n", exe, version)
 		return nil
 	default:
 		return fmt.Errorf("%s '%s'", "Error: unknown command:", cmd) // Original product error.

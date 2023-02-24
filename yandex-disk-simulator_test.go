@@ -108,7 +108,7 @@ func TestDoMain01Help(t *testing.T) {
 // try to ask for utility version
 func TestDoMain01Version(t *testing.T) {
 	res := execCommand(t, "-v")
-	assert.Equalf(t, fmt.Sprintf(verMsg, exe, version), res, "incorrect message: %s", res)
+	assert.Equalf(t, fmt.Sprintf("%s %s\n", exe, version), res, "incorrect message: %s", res)
 }
 
 // try to start with wrong and long command
