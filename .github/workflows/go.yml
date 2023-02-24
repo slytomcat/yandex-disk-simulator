@@ -11,13 +11,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: 1.19
       - name: Cache
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v3
         with:
           path: |
             /home/runner/.cache/go-build/
@@ -28,7 +28,7 @@ jobs:
       - name: Format coverage
         run: go tool cover -html=cover.out -o coverage.html
       - name: Upload coverage to Artifacts
-        uses: actions/upload-artifact@v2.2.2
+        uses: actions/upload-artifact@v3
         with:
           name: coverage_artifacts
           path: coverage.html
@@ -36,13 +36,13 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: 1.19
       - name: Cache
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v3
         with:
           path: |
             /home/runner/.cache/go-build/
@@ -57,20 +57,19 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=386 ./build.sh
           mv yandex-disk-simulator yandex-disk-simulator-linux-386
       - name: Upload a Build Artifacts
-        uses: actions/upload-artifact@v2.2.2
+        uses: actions/upload-artifact@v3
         with:
           name: build_artifacts
           path: |
             yandex-disk-simulator-linux-amd64
             yandex-disk-simulator-linux-386
-            VERSION
   push:
     needs: build
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v2.0.8
+        uses: actions/download-artifact@v3
         with:
           name: build_artifacts
       - name: Upload to release assets
