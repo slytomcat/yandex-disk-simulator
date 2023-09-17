@@ -1,1 +1,2 @@
-CGO_ENABLED=0 go build -ldflags "-X main.version=v.$(git branch --show-current)-$(git rev-parse --short HEAD)" 
+CGO_ENABLED=0 go build -buildvcs=false -trimpath -ldflags "-s -w -X main.version=$(git branch --show-current)-$(git rev-parse --short HEAD)" 
+upx -qqq --best yandex-disk-simulator
