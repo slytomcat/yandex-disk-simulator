@@ -43,7 +43,7 @@ Commands:
 	stop	stops the daemon
 	status	get the daemon status
 	sync	begin the synchronization events simulation
-	error   berin short time error symulatin
+	error   begin short time error simulation
 	help	output this help message and exit
 	version	output version information and exit
 	setup	prepares the simulation environment. It creates the configuration and
@@ -85,14 +85,14 @@ func doMain(args ...string) error {
 	}
 
 	// open simulator log
-	dlog, err := os.OpenFile(daemonLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	dLog, err := os.OpenFile(daemonLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return fmt.Errorf("daemon log file '%s' opening error: %w", daemonLogFile, err)
 	}
-	defer dlog.Close()
+	defer dLog.Close()
 
 	// configure logging output
-	log.SetOutput(dlog)
+	log.SetOutput(dLog)
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds)
 
 	cmd := args[1]
@@ -159,26 +159,29 @@ func daemon(syncDir string) error {
 	log.Println("Daemon started")
 	defer log.Println("Daemon stopped")
 
-	// create daemon's synchronisation log path if it is not exists
+	// create daemon's synchronization log path if it is not exists
 	logPath := path.Join(os.ExpandEnv(syncDir), ".sync")
 	err := os.MkdirAll(logPath, 0750)
 	if err != nil {
 		return fmt.Errorf("%s creation error: %w", logPath, err)
 	}
-	// open daemon's synchronisation log file
+	// open daemon's synchronization log file
 	logFilePath := path.Join(logPath, "cli.log")
-	logfile, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	logFile, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return fmt.Errorf("%s opening error: %w", logFilePath, err)
 	}
-	defer logfile.Close()
+	defer logFile.Close()
 
 	// open listening socket as server
 	ln, err := net.Listen("unix", socketPath)
 	if err != nil {
 		return handleErr("socket listener creation error: %w", err)
 	}
-	defer ln.Close()
+	defer func() {
+		ln.Close()
+		os.Remove(socketPath)
+	}()
 
 	// disconnect from parent process to become a daemon process
 	// disconnecting as late as possible to report to parent about all preparation errors
@@ -191,7 +194,7 @@ func daemon(syncDir string) error {
 	// Use handleErr() to do so.
 
 	// create new simulator engine
-	sim := NewSimilator(logfile)
+	sim := NewSimulator(logFile)
 	// begin simulation of initial synchronisation
 	sim.Simulate("Start")
 
@@ -269,7 +272,7 @@ func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, erro
 	return false, nil // continue accepting of incoming connections
 }
 
-// send command to daemon and handle the responce from it
+// send command to daemon and handle the response from it
 func handleCommand(cmd string) error {
 	if notExists(socketPath) {
 		return fmt.Errorf("%s", "Error: daemon not started")
