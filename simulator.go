@@ -89,8 +89,8 @@ type Simulator struct {
 	logger      io.Writer          // daemon synchronisation log
 }
 
-// NewSimilator - constructor of new Simulator
-func NewSimilator(logger io.Writer) *Simulator {
+// NewSimulator - constructor of new Simulator
+func NewSimulator(logger io.Writer) *Simulator {
 	return &Simulator{
 		logger:      logger,
 		message:     " ",
