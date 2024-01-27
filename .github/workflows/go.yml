@@ -11,24 +11,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.21
-      - name: Cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            /home/runner/.cache/go-build/
-            /home/runner/go/pkg/mod/
-          key: GO_MOD_CACHE
+          go-version-file: './go.mod'
       - name: Test
         run: go test -v --race -coverprofile cover.out ./...
       - name: Format coverage
         run: go tool cover -html=cover.out -o coverage.html
       - name: Upload coverage to Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage_artifacts
           path: coverage.html
@@ -36,48 +29,31 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.21
-      - name: Cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            /home/runner/.cache/go-build/
-            /home/runner/go/pkg/mod/
-          key: GO_MOD_CACHE
-      - name: Build amd64
+          go-version-file: './go.mod'
+      - name: Build
         run: |
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 ./build.sh
-          mv yandex-disk-simulator yandex-disk-simulator-linux-amd64
-      - name: Build 386
-        run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=386 ./build.sh
-          mv yandex-disk-simulator yandex-disk-simulator-linux-386
       - name: Upload a Build Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build_artifacts
           path: |
-            yandex-disk-simulator-linux-amd64
-            yandex-disk-simulator-linux-386
+            yandex-disk-simulator
   push:
     needs: build
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: build_artifacts
-      - name: Upload to release assets
-        uses: xresloader/upload-to-github-release@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          file: yandex-disk-simulator-linux*
-          verbose: true
-          overwrite: true
-          draft: false
+      - name: draft new release and upload assets
+        env: 
+          GH_TOKEN: ${{ secrets.ACTION_TOKEN }}
+        run: |
+          gh release create "$(git branch --show-current)-$(git rev-parse --short HEAD)" ./yandex-disk-simulator
