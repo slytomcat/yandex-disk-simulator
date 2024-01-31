@@ -148,7 +148,7 @@ func daemonize(exe string) error {
 		return err
 	}
 	// simulate the starting process
-	time.Sleep(time.Duration(startTime) * time.Millisecond)
+	time.Sleep(startTime)
 
 	fmt.Println("Done")
 	return nil
@@ -259,7 +259,7 @@ func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, erro
 		// send back nothing to show that daemon is not active any more
 		// simulate normal exit
 		sim.Simulate("Stop")
-		time.Sleep(time.Duration(stopTime) * time.Millisecond)
+		time.Sleep(stopTime)
 		return true, nil // stop accepting of incoming connections
 	default:
 		// unexpected command

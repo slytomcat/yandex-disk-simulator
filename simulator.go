@@ -11,17 +11,17 @@ const (
 	// Idle message of working daemon
 	msgIdle = "Synchronization core status: idle\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tTotal: 43.50 GB\n\tUsed: 2.89 GB\n\tAvailable: 40.61 GB\n\tMax file size: 50 GB\n\tTrash size: 0 B\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do_it'\n\tfile: 'very_very_long_long_file_with_underscore'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n"
 	// starting pause time
-	startTime = 500
-	stopTime  = 110
+	startTime = 500 * time.Millisecond
+	stopTime  = 110 * time.Millisecond
 )
 
 var (
-	// start, sync, and error events sequeses
+	// start, sync, and error events sequences
 	simSet = map[string][]event{
 		"Start": {
 			{
 				" ",
-				time.Duration(1200) * time.Millisecond,
+				1200 * time.Millisecond,
 				""},
 			{
 				"Synchronization core status: paused\nPath to Yandex.Disk directory: '/home/stc/Yandex.Disk'\n\tThe quota has not been received yet.\n\nLast synchronized items:\n\tfile: 'File.ods'\n\tfile: 'downloads/file.deb'\n\tfile: 'downloads/setup'\n\tfile: 'download'\n\tfile: 'down'\n\tfile: 'do_it'\n\tfile: 'very_very_long_long_file_with_underscore'\n\tfile: 'o'\n\tfile: 'w'\n\tfile: 'n'\n\n",
@@ -73,20 +73,20 @@ var (
 	}
 )
 
-// event - the stucture for change event
+// event - the structure for change event
 type event struct {
 	msg      string        // status message
 	duration time.Duration // event duration
-	logm     string        // message to write to cli.log or skip writing when it ""
+	logMsg   string        // message to write to cli.log or skip writing when it ""
 }
 
-// Simulator - the itnterface to simulator engine
+// Simulator - the interface to simulator engine
 type Simulator struct {
 	message     string             // current daemon status message
 	msgLock     sync.RWMutex       // message update lock
 	symLock     sync.Mutex         // simulation lock
 	simulations map[string][]event // simulation sequences
-	logger      io.Writer          // daemon synchronisation log
+	logger      io.Writer          // daemon synchronization log
 }
 
 // NewSimulator - constructor of new Simulator
@@ -118,15 +118,15 @@ func (s *Simulator) Simulate(set string) {
 		defer s.symLock.Unlock()
 		for _, e := range seq {
 			s.setMsg(e.msg)
-			if e.logm != "" {
-				if _, err := l.Write([]byte(e.logm + "\n")); err != nil {
+			if e.logMsg != "" {
+				if _, err := l.Write([]byte(e.logMsg + "\n")); err != nil {
 					panic(err)
 				}
-				log.Println(e.logm)
+				log.Println(e.logMsg)
 			}
 			time.Sleep(e.duration)
 		}
-		// at the end of simulation set the idle/synchronised status message
+		// at the end of simulation set the idle/synchronized status message
 		s.setMsg(msgIdle)
 		if _, err := l.Write([]byte(set + " simulation finished\n")); err != nil {
 			panic(err)

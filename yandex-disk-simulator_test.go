@@ -471,5 +471,4 @@ Last synchronized items:
 		require.EqualError(t, err, "Error: daemon not started")
 		require.Empty(t, res)
 	})
-
 }
