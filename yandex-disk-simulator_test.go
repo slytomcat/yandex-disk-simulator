@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -50,7 +49,7 @@ func getStatusAfterEvent(t *testing.T, timeout time.Duration) string {
 	watch, err := fsnotify.NewWatcher()
 	require.NoError(t, err)
 	defer watch.Close()
-	require.NoError(t, watch.Add(filepath.Join(SyncDirPath, ".sync/cli.log")))
+	require.NoError(t, watch.Add(filepath.Join(SyncDirPath, logDirName, logFileName)))
 	select {
 	case err := <-watch.Errors:
 		t.Fatal(err.Error())
@@ -64,8 +63,6 @@ func getStatusAfterEvent(t *testing.T, timeout time.Duration) string {
 }
 
 func TestMain(m *testing.M) {
-	flag.Parse()
-
 	// set environment variables for setup of simulator
 	SyncDirPath = os.ExpandEnv(SyncDirPath)
 	os.Setenv("Sim_SyncDir", SyncDirPath)
@@ -86,7 +83,6 @@ func TestMain(m *testing.M) {
 // try to start utility without command
 func TestDoMain00NoCommand(t *testing.T) {
 	err := doMain(exe)
-	require.Error(t, err, "no error for no command")
 	require.EqualError(t,
 		err,
 		"Error: command hasn't been specified. Use the --help command to access help\nor setup to launch the setup wizard.",
@@ -106,7 +102,7 @@ func TestDoMain01Help(t *testing.T) {
 // try to ask for utility version
 func TestDoMain01Version(t *testing.T) {
 	res := execCommand(t, "-v")
-	require.Equal(t, fmt.Sprintf("%s %s\n", exe, version), res)
+	require.Equal(t, fmt.Sprintf(verMsg, exe, version), res)
 }
 
 // try to start with wrong and long command

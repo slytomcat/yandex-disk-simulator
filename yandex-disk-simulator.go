@@ -17,6 +17,7 @@ package main
 
 import (
 	"bufio"
+	"cmp"
 	"errors"
 	"fmt"
 	"io"
@@ -30,12 +31,11 @@ import (
 	"time"
 )
 
-var version string
-
 var (
+	version       string
 	daemonLogFile = path.Join(os.TempDir(), "yandexdisksimulator.log")
 	socketPath    = path.Join(os.TempDir(), "yandexdisksimulator.socket")
-	verMsg        = "%s\n    version: %s\n"
+	verMsg        = "%s %s\n"
 	helpMsg       = `Usage:
 	%s <cmd>
 Commands:
@@ -59,6 +59,14 @@ Environment variables (used in setup):
 
 	version: %s
 `
+)
+
+const (
+	logDirName     = ".sync"
+	logFileName    = "cli.log"
+	configPath     = "$HOME/.config/yandex-disk"
+	configFileName = "config.cfg"
+	syncPath       = "$HOME/Yandex.Disk"
 )
 
 // notExists returns true when specified file or path is not exists
@@ -116,7 +124,7 @@ func doMain(args ...string) error {
 		fmt.Printf(helpMsg, exe, version)
 		return nil
 	case "version", "-v":
-		fmt.Printf("%s %s\n", exe, version)
+		fmt.Printf(verMsg, exe, version)
 		return nil
 	default:
 		return fmt.Errorf("%s '%s'", "Error: unknown command:", cmd) // Original product error.
@@ -160,13 +168,13 @@ func daemon(syncDir string) error {
 	defer log.Println("Daemon stopped")
 
 	// create daemon's synchronization log path if it is not exists
-	logPath := path.Join(os.ExpandEnv(syncDir), ".sync")
+	logPath := path.Join(os.ExpandEnv(syncDir), logDirName)
 	err := os.MkdirAll(logPath, 0750)
 	if err != nil {
 		return fmt.Errorf("%s creation error: %w", logPath, err)
 	}
 	// open daemon's synchronization log file
-	logFilePath := path.Join(logPath, "cli.log")
+	logFilePath := path.Join(logPath, logFileName)
 	logFile, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		return fmt.Errorf("%s opening error: %w", logFilePath, err)
@@ -313,12 +321,8 @@ func handleCommand(cmd string) error {
 // checkCfg checks the daemon configuration and requered files/directories.
 // It returns error or the synchronized path read from configuration file.
 func checkCfg() (string, error) {
-	// get the configuration file path
-	confDir := os.Getenv("Sim_ConfDir")
-	if confDir == "" {
-		confDir = "$HOME/.config/yandex-disk"
-	}
-	confFile := path.Join(os.ExpandEnv(confDir), "config.cfg")
+	// make the configuration file path
+	confFile := path.Join(os.ExpandEnv(cmp.Or(os.Getenv("Sim_ConfDir"), configPath)), configFileName)
 	log.Println("Config file: ", confFile)
 	// read data from configuration file
 	f, err := os.Open(confFile)
@@ -359,52 +363,26 @@ func checkCfg() (string, error) {
 
 // setup creates the configuration file, file with token and folder for synchronisation
 func setup() error {
-
 	// determine the configuration path
-	cfgPath := os.Getenv("Sim_ConfDir")
-	if cfgPath == "" {
-		cfgPath = os.ExpandEnv("$HOME/.config/yandex-disk")
-	}
-
+	cfgPath := cmp.Or(os.Getenv("Sim_ConfDir"), os.ExpandEnv(configPath))
 	// determine the syncronisation path
-	syncPath := os.Getenv("Sim_SyncDir")
-	if syncPath == "" {
-		syncPath = os.ExpandEnv("$HOME/Yandex.Disk")
-	}
+	syncPath := cmp.Or(os.Getenv("Sim_SyncDir"), os.ExpandEnv(syncPath))
 	if err := os.MkdirAll(cfgPath, 0750); err != nil {
 		return fmt.Errorf("config path creation error: %w", err)
 	}
-
 	// create the token file
 	auth := path.Join(cfgPath, "passwd")
 	if notExists(auth) {
-		tfile, err := os.OpenFile(auth, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
-		if err != nil {
-			return fmt.Errorf("yandex-disk token file '%s' creation error: %w", auth, err)
-		}
-		// yandex-disk-simulator doesn't require the real token
-		if _, err = tfile.Write([]byte("token")); err != nil {
+		if err := os.WriteFile(auth, []byte("token"), 0600); err != nil {
 			return fmt.Errorf("yandex-disk token file '%s' writing error: %w", auth, err)
 		}
-		if err := tfile.Close(); err != nil {
-			return fmt.Errorf("yandex-disk token file '%s' closing error: %w", auth, err)
-		}
 	}
-
 	// create the configuration file and write the configuration values in it
-	cfg := path.Join(cfgPath, "config.cfg")
-	cfile, err := os.OpenFile(cfg, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
+	cfg := path.Join(cfgPath, configFileName)
+	err := os.WriteFile(cfg, []byte("proxy=\"no\"\n\nauth=\""+auth+"\"\ndir=\""+syncPath+"\"\n\n"), 0600)
 	if err != nil {
-		return fmt.Errorf("config file '%s' opening error: %w", cfg, err)
+		return fmt.Errorf("config file '%s' writing error: %w", cfg, err)
 	}
-	_, err = cfile.Write([]byte("proxy=\"no\"\n\nauth=\"" + auth + "\"\ndir=\"" + syncPath + "\"\n\n"))
-	if err != nil {
-		return fmt.Errorf("can't write to config file: %w", err)
-	}
-	if err := cfile.Close(); err != nil {
-		return fmt.Errorf("config file '%s' closing error: %w", cfg, err)
-	}
-
 	// create the folder for synchronisation
 	if err = os.MkdirAll(syncPath, 0750); err != nil {
 		return fmt.Errorf("synchronization Dir '%s' creation error: %w", syncPath, err)
