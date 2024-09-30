@@ -30,9 +30,8 @@ import (
 	"time"
 )
 
-var version string
-
 var (
+	version       string
 	daemonLogFile = path.Join(os.TempDir(), "yandexdisksimulator.log")
 	socketPath    = path.Join(os.TempDir(), "yandexdisksimulator.socket")
 	verMsg        = "%s\n    version: %s\n"
