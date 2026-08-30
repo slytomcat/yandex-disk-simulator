@@ -86,15 +86,17 @@ type Simulator struct {
 	msgLock     sync.RWMutex       // message update lock
 	symLock     sync.Mutex         // simulation lock
 	simulations map[string][]event // simulation sequences
+	SyncDir     string             // path to the synchronization directory
 	logger      io.Writer          // daemon synchronization log
 }
 
 // NewSimulator - constructor of new Simulator
-func NewSimulator(logger io.Writer) *Simulator {
+func NewSimulator(logger io.Writer, syncDir string) *Simulator {
 	return &Simulator{
 		logger:      logger,
 		message:     " ",
 		simulations: simSet,
+		SyncDir:     syncDir,
 	}
 }
 
@@ -126,8 +128,10 @@ func (s *Simulator) Simulate(set string) {
 			}
 			time.Sleep(e.duration)
 		}
-		// at the end of simulation set the idle/synchronized status message
-		s.setMsg(msgIdle)
+		// at the end of simulation set the idle status message if the simulation is not "Stop"
+		if set != "Stop" {
+			s.setMsg(msgIdle)
+		}
 		if _, err := l.Write([]byte(set + " simulation finished\n")); err != nil {
 			panic(err)
 		}

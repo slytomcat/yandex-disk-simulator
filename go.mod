@@ -1,6 +1,6 @@
 module github.com/slytomcat/yandex-disk-simulator
 
-go 1.23.4
+go 1.26.7
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0
