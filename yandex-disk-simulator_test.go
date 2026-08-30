@@ -107,8 +107,9 @@ func TestDoMain01Version(t *testing.T) {
 
 // try to start with wrong and long command
 func TestDoMain02WrongCommand(t *testing.T) {
-	err := doMain(exe, "wrongCMD_cut_it")
-	require.Equal(t, errors.New("Error: unknown command: 'wrongCMD'"), err)
+	cmd := "wrongCMD_cut_it"
+	err := doMain(exe, cmd)
+	require.Equal(t, fmt.Errorf("Error: unknown command: '%s'", cmd), err)
 }
 
 // try to start without configuration
@@ -258,7 +259,7 @@ Last synchronized items:
 			getStatusAfterEvent(t, 6*time.Second))
 	})
 
-	t.Run("sunc", func(t *testing.T) {
+	t.Run("sync", func(t *testing.T) {
 		require.Empty(t, execCommand(t, "sync"))
 	})
 
@@ -467,4 +468,36 @@ Last synchronized items:
 		require.EqualError(t, err, "Error: daemon not started")
 		require.Empty(t, res)
 	})
+}
+
+func TestCalculateMaxMessageLength(t *testing.T) {
+	t.Skip("calulatin only")
+	msgs := []string{msgIdle}
+	for _, set := range simSet {
+		for _, e := range set {
+			msgs = append(msgs, e.msg)
+		}
+	}
+	maxLen := 0
+	for _, msg := range msgs {
+		// teoretically max length is the length of the header mesaage + 25 bytes for the "Last synchronized items:/n" + 10 items where each item is:
+		// - "/tfile: '" - 8 bytes
+		// - up to 256 bytes for the file path
+		// - "'/n" - 2 byte
+		// so the total is 8 + 256 + 2 = 266 bytes per item, and for 10 items it is 2660 bytes
+		// 25 bytes for the "Last synchronized items:/n" + 10 items 2660 each = 2685 bytes
+		// p := strings.Index(msg, "Last synchronized items:")
+		// if p > 0 {
+		// 	msg = msg[:p]
+		// }
+		// length := len(msg) + 2685
+		// it gives 2918 bytes, so the real buffer length for readin output from daemo is someting like 3000 bytes.
+		//
+		// But the maximum similator message length is 460 bytes
+		length := len(msg)
+		if length > maxLen {
+			maxLen = length
+		}
+	}
+	t.Logf("Max message length: %d bytes\n", maxLen)
 }

@@ -67,6 +67,8 @@ const (
 	configPath     = "$HOME/.config/yandex-disk"
 	configFileName = "config.cfg"
 	syncPath       = "$HOME/Yandex.Disk"
+	maxReadSize    = 512 // see TestMaxMessageLength() in yandex-disk-simulator_test.go
+	maxCmdLength   = 7   // 'start', 'status', 'sync', 'error', 'stop' are 7 characters or less
 )
 
 // notExists returns true when specified file or path is not exists
@@ -104,8 +106,9 @@ func doMain(args ...string) error {
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds)
 
 	cmd := args[1]
-	if len(cmd) > 8 {
-		cmd = cmd[0:8]
+	if len(cmd) > maxCmdLength {
+		// all commands are maxCmdLength or less, so it is an error
+		return fmt.Errorf("%s '%s'", "Error: unknown command:", cmd)
 	}
 	_, exe := path.Split(args[0])
 
@@ -202,30 +205,29 @@ func daemon(syncDir string) error {
 	// Use handleErr() to do so.
 
 	// create new simulator engine
-	sim := NewSimulator(logFile)
+	sim := NewSimulator(logFile, syncDir)
 	// begin simulation of initial synchronisation
 	sim.Simulate("Start")
 
 	// main daemon loop
-	var exit bool
-	for !exit {
+	for {
 		// accept connection to socket
 		conn, err := ln.Accept()
 		if err != nil {
 			return handleErr("accepting connection error: %w", err)
 		}
-
 		// handle received connection
-		exit, err = handleConnection(conn, sim, syncDir)
-		if err != nil {
+		if exit, err := handleConnection(conn, sim); err != nil {
 			return handleErr("connection handling error: %w", err)
-		}
+		} else if exit {
+			break
+		} // stop accepting of incoming connections
 	}
 	return nil
 }
 
 // handleErr formats error, writes it into simulator log and returns formatted error
-func handleErr(format string, params ...interface{}) error {
+func handleErr(format string, params ...any) error {
 	err := fmt.Errorf(format, params...)
 	log.Println(err)
 	return err
@@ -234,19 +236,19 @@ func handleErr(format string, params ...interface{}) error {
 // handleConnection reads the command from connection, perform required operation,
 // and sends back the response on command through the same connection.
 // It returns error and stop flag that instruct the main daemon loop to continue or to stop.
-func handleConnection(conn net.Conn, sim *Simulator, syncDir string) (bool, error) {
+func handleConnection(conn net.Conn, sim *Simulator) (bool, error) {
 	defer conn.Close()
 
 	// read command
-	buf := make([]byte, 8)
+	buf := make([]byte, maxCmdLength)
 	nr, err := conn.Read(buf)
 	if err != nil {
 		return true, fmt.Errorf("connection reading error: %w", err)
 	}
 	cmd := string(buf[0:nr])
-	log.Println("Received:", cmd)
+	log.Println("Received command:", cmd)
 	// check the synchronization path existence and return error in case of absence of it
-	if notExists(syncDir) && cmd != "stop" {
+	if notExists(sim.SyncDir) && cmd != "stop" {
 		if _, err = conn.Write([]byte("Error: Indicated directory does not exist")); err != nil {
 			return true, fmt.Errorf("writing to connecton error: %w", err)
 		}
@@ -297,7 +299,7 @@ func handleCommand(cmd string) error {
 		return fmt.Errorf("socket write error: %w", err)
 	}
 	// read response
-	buf := make([]byte, 512)
+	buf := make([]byte, maxReadSize)
 	n, err := conn.Read(buf)
 	if err != nil {
 		if err == io.EOF { // closed socket mean that daemon was stopped
@@ -310,7 +312,7 @@ func handleCommand(cmd string) error {
 	if n > 1 {
 		// Handle errors from daemon
 		if strings.HasPrefix(m, ("Error:")) {
-			return fmt.Errorf(m)
+			return errors.New(m)
 		}
 		// output non-error messages from daemon
 		fmt.Println(m)
